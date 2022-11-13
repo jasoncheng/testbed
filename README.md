@@ -203,6 +203,10 @@
 
     $ terraform destroy -var-file=vars/YOUR_TERRAFORM_VAR.tf 
 
+  ![Ceph dashboard](https://user-images.githubusercontent.com/540463/201524079-0f35fcbc-aff1-4a70-846e-96050afd8db5.png)
+
+  ![k8s CSI for Ceph](https://user-images.githubusercontent.com/540463/201524082-f4d10d43-ddfb-4787-a75d-55f485043af5.png)
+
 <br /><br />
 
 ## Ansbile Playbook - Health check
