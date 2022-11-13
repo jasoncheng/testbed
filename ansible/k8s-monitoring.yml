@@ -1,0 +1,9 @@
+# - name: Docker login
+#   hosts: nodes[0]
+#   roles:
+#   - { role: docker }
+
+- name: Monitoring
+  hosts: nodes[0]
+  roles:
+  - { role: k8s.monitoring }

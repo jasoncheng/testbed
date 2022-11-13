@@ -1,0 +1,89 @@
+#SLF4J: Class path contains multiple SLF4J bindings
+- name: Delete log4j-slf4j-impl-2.17.2.jar
+  file:
+    path: "{{ HBASE_HOME }}/lib/client-facing-thirdparty/log4j-slf4j-impl-2.17.2.jar"
+    state: absent
+
+- name: Configure - hbase-env.sh
+  lineinfile:
+    path: "{{ HBASE_HOME }}/conf/hbase-env.sh"
+    line: "export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64"
+    regexp: 'export JAVA_HOME'
+
+- name: Absent hbase-site.xml - property
+  xml:
+    path: "{{ HBASE_HOME }}/conf/hbase-site.xml"
+    xpath: /configuration/property
+    state: 'absent'
+    backup: true
+
+- name: Config - hbase-site.xml - hbase.cluster.distributed
+  lineinfile:
+    path: "{{ HBASE_HOME }}/conf/hbase-site.xml"
+    insertafter: "<configuration>"
+    line: "  <property><name>hbase.cluster.distributed</name><value>true</value></property>"
+    regexp: 'hbase.cluster.distributed'
+
+- name: Config - hbase-site.xml - hbase.rootdir
+  lineinfile:
+    path: "{{ HBASE_HOME }}/conf/hbase-site.xml"
+    insertafter: "<configuration>"
+    line: "  <property><name>hbase.rootdir</name><value>hdfs://{{  groups['namenode'][0] }}:9000/hbase</value></property>"
+    regexp: 'hbase.rootdir'
+
+- name: Config - hbase-site.xml - hbase.zookeeper.property.dataDir
+  lineinfile:
+    path: "{{ HBASE_HOME }}/conf/hbase-site.xml"
+    insertafter: "<configuration>"
+    line: "  <property><name>hbase.zookeeper.property.dataDir</name><value>{{ ZK_HOME }}</value></property>"
+    regexp: 'hbase.zookeeper.property.dataDir'
+
+- name: Config - hbase-site.xml - hbase.zookeeper.quorum
+  lineinfile:
+    path: "{{ HBASE_HOME }}/conf/hbase-site.xml"
+    insertafter: "<configuration>"
+    line: "  <property><name>hbase.zookeeper.quorum</name><value>{{ groups['datanode'] | join(',') }}</value></property>"
+    regexp: 'hbase.zookeeper.quorum'
+
+- name: Config - hbase-site.xml - hbase.wal.provider
+  lineinfile:
+    path: "{{ HBASE_HOME }}/conf/hbase-site.xml"
+    insertafter: "<configuration>"
+    line: "  <property><name>hbase.wal.provider</name><value>filesystem</value></property>"
+    regexp: 'hbase.wal.provider'
+
+- name: Config - hbase-site.xml - hbase.tmp.dir
+  lineinfile:
+    path: "{{ HBASE_HOME }}/conf/hbase-site.xml"
+    insertafter: "<configuration>"
+    line: "  <property><name>hbase.tmp.dir</name><value>/tmp</value></property>"
+    regexp: 'hbase.tmp.dir'
+
+- name: Config - regionservers remove localhost
+  lineinfile:
+    dest: "{{ HBASE_HOME }}/conf/regionservers"
+    regexp: 'localhost'
+    state: absent
+
+- name: Config - regionservers add server
+  lineinfile:
+    path: "{{ HBASE_HOME }}/conf/regionservers"
+    line: "{{ item }}"
+    regexp: "{{ item }}"
+  with_items: "{{ groups['datanode'] }}"
+  when:
+  - inventory_hostname == groups['namenode'][0]
+  - groups['namenode'][0] not in item
+
+- name: Config - delete uselesss *.cmd
+  file:
+    path: "{{ HBASE_HOME }}/conf/*.cmd"
+    state: absent
+
+- name: Create logs dir
+  file:
+    path: "{{ HBASE_HOME }}/logs"
+    state: directory
+    mode: 0775
+    owner: ubuntu
+    group: root

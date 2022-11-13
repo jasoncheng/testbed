@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-app-v2
+  labels:
+    app: hello-app-v2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hello-app-v2
+  template:
+    metadata:
+      labels:
+        app: hello-app-v2
+    spec:
+      #hostNetwork: true
+      containers:
+      - name: hello-app-v2
+        image: {{ REGISTRY }}/{{ REPO }}
+        ports:
+        - containerPort: 3000
+        env:
+        - name: SERVICE_NAME
+          value: hello-app-v2
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name

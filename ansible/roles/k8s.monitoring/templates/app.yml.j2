@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: http-request-total
+  namespace: "{{ K8S_DEFAULE_NAMESPACE }}"
+  labels:
+    app: http-request-total
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: http-request-total
+  template:
+    metadata:
+      labels:
+        app: http-request-total
+        k8s-app: "kube-state-metrics"
+    spec:
+      containers:
+      - name: http-request-total
+        image: jasoncheng/go-http-request-counts
+        ports:
+        - containerPort: 3000
+          name: metrics

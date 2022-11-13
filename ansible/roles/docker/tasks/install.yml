@@ -1,0 +1,6 @@
+- name: Install Docker
+  shell: |
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+    echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable" > /etc/apt/sources.list.d/docker-ce.list
+    apt update
+    apt install -qq -y docker-ce docker-ce-cli containerd.io

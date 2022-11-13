@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: "{{ K8S_DEFAULE_NAMESPACE }}"
+  name: hello-service-v1
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 3000
+  selector:
+    app: hello-app
+  type: LoadBalancer
+  #type: NodePort

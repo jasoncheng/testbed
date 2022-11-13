@@ -1,0 +1,35 @@
+- set_fact: dir="../k8s-operator/elasticweb" img="jasoncheng/k8s-go-operator-elasticweb"
+
+- name: make, push ansible operator to docker registry
+  shell: "make docker-build docker-push IMG={{ img }} && make deploy IMG={{ img }} && kubectl apply -f config/samples/app_v1_elasticweb.yaml"
+  args:
+    chdir: "{{ dir }}"
+  register: result
+
+- debug: msg="{{ result.stdout_lines }}"
+
+- shell: kubectl get pods -o=name | grep elasticweb-sample|sed "s/^.\{4\}//"
+  register: podname
+  until: podname.stdout_lines | length > 0
+  retries: 10
+  delay: 3
+  ignore_errors: true
+
+- debug: msg="{{ podname }}"
+
+- wait_for: timeout=20
+
+- name: check if tomcat running
+  shell: "kubectl exec {{ podname.stdout }} -- curl http://localhost:8080/ | grep tomcat"
+  register: result
+  ignore_errors: true
+
+# - debug: msg="{{ result }}"
+
+- name: delete deployment
+  shell: "make undeploy"
+  args:
+    chdir: "{{ dir }}"
+  register: result
+
+# - debug: msg="{{ result.stdout_lines }}"

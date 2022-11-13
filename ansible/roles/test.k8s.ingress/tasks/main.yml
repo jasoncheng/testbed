@@ -1,0 +1,126 @@
+---
+
+- name: check if k8s running
+  wait_for:
+    host: "{{ groups['k8sM'][0] }}"
+    port: 6443
+    delay: 5
+    timeout: 30
+    state: started
+    msg: "k8s cluserer is not running, please play provision.yml --tags base,k8s first"
+
+- set_fact: HOST1="v1.jasoncheng.tw" HOST2="*.jasoncheng.tw" 
+
+- set_fact: REGISTRY="{{ DOCKER_REGISTRY }}" REPO="py-webserver"
+
+- set_fact: DIR="~/hello-ingress"
+
+- name: Create dir
+  file:
+    path: "{{ DIR  }}"
+    state: directory
+
+- name: Upload python script and Dockerfile
+  copy:
+    src: "{{ item  }}"
+    dest: "{{ DIR }}"
+  with_fileglob:
+  - "*"
+
+- name: Upload k8s template
+  tags: ['apply']
+  template:
+    dest: "{{ DIR }}/{{ item | replace('.j2', '') }}"
+    src: "{{ item }}"
+  with_items:
+  - "hello-ingress.yaml.j2"
+  - "hello-deployment-v1.yaml.j2"
+  - "hello-deployment-v2.yaml.j2"
+  - "hello-service-v1.yaml.j2"
+  - "hello-service-v2.yaml.j2"
+
+- name: pip install
+  pip: name="{{ item }}"
+  with_items:
+  - docker
+  - k8s
+  - kubernetes
+
+- name: Docker
+  include_role:
+    name: docker
+    tasks_from: main.yml
+    
+- name: Docker - build image
+  community.docker.docker_image:
+    name: "{{ REPO }}"
+    repository: "{{ REGISTRY }}/{{ REPO }}"
+    build:
+      path:  "{{ DIR }}"
+    source: build
+    push: yes
+    force_absent: true
+    force_tag: true
+    force_source: true
+  register: buildinfo
+
+- name: Kubectl apply
+  tags: ['apply']
+  shell: "{{ item }}"
+  with_items:
+  - kubectl apply -f {{ DIR }}/hello-deployment-v1.yaml
+  - kubectl apply -f {{ DIR }}/hello-deployment-v2.yaml
+  - kubectl apply -f {{ DIR }}/hello-service-v1.yaml
+  - kubectl apply -f {{ DIR }}/hello-service-v2.yaml
+  - kubectl apply -f {{ DIR }}/hello-ingress.yaml
+
+- name: Get ingress-nginx NodePort for later use
+  shell: "kubectl get svc --no-headers -n ingress-nginx ingress-nginx-controller -o custom-columns=PORT:spec.ports[0].nodePort"
+  register: nodeport
+
+- set_fact: nodeport="{{ nodeport.stdout }}"
+
+- debug:
+    msg: "Ingress NodePort {{ nodeport }}"
+
+- name: "Verify hello-service-v1 localhost:{{ nodeport }}/jason"
+  uri:
+    url: "http://localhost:{{ nodeport }}/jason"
+    return_content: yes
+    validate_certs: no
+    status_code:
+    - 200
+  until: uri_output.status == 200
+  retries: 30
+  delay: 6
+  register: uri_output
+  failed_when: "'v1' not in uri_output.content"
+
+- name: Response from nginx ingress to hello-service-v1
+  debug: var=uri_output
+
+- name: "Verify hello-service-v2 localhost:{{ nodeport }}/"
+  uri:
+    url: "http://localhost:{{ nodeport }}"
+    return_content: yes
+    validate_certs: no
+    status_code:
+    - 200
+  until: uri_output.status == 200
+  retries: 30
+  delay: 5
+  register: uri_output
+  failed_when: "'v2' not in uri_output.content"
+
+- name: Response from nginx ingress to hello-service-v2
+  debug: var=uri_output
+
+# - name: Kill port foraward if exists
+#   become: true
+#   shell: "pkill -f port-forward || true"
+#   ignore_errors: true
+
+# - name: Port Forward
+#   become: true
+#   become_user: root
+#   shell: "kubectl port-forward --namespace=ingress-nginx service/ingress-nginx-controller 80:80"

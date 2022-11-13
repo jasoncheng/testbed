@@ -1,0 +1,30 @@
+
+- set_fact:
+    goProjectDir: "{{ playbook_dir }}/roles/{{ role_name }}/files/goHttpRequestTotal"
+
+- name: Create directory
+  file:
+    state: directory
+    path: "{{ tmpImageDir }}"
+
+- name: Copy files
+  copy:
+    src: "{{ goProjectDir }}/{{ item }}"
+    dest: "{{ tmpImageDir }}/"
+  with_items:
+  - "Dockerfile"
+  - "go.mod"
+  - "go.sum"
+  - "main.go"
+
+- community.docker.docker_image:
+    name: "{{ imageRepo }}"
+    repository: "{{ DOCKER_REGISTRY }}/{{ imageRepo }}"
+    build:
+      path: "{{ tmpImageDir }}"
+    source: build
+    push: yes
+    force_absent: true
+    force_tag: true
+    force_source: true
+  ignore_errors: true

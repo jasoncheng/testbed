@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace:  {{ K8S_DEFAULE_NAMESPACE }}
+  name: "spark-streaming"
+  labels:
+    app: spark
+    purpose: test-spark
+spec:
+  hostNetwork: true
+  hostAliases:
+  {% for host in groups['nodes'] %}
+  - ip: "{{ hostvars[host].ansible_host }}"
+      hostnames:
+      - "{{ host }}"
+  {% endfor %}
+
+  containers:
+  - name: "spark-streaming"
+    image: {{ registry }}/spark-streaming
+  restartPolicy: Never

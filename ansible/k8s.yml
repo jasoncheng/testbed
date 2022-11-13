@@ -1,0 +1,41 @@
+---
+- name: Kubernetes Cluster
+  hosts: k8sS, k8sM
+  become: true
+  roles:
+    - { role: k8s, tags: ['k8s', 'k8sM', 'k8sS'] }
+
+- name: K8S - Master
+  hosts: k8sM[0]
+  gather_facts: true
+  become_user: "{{ K8S_USER }}"
+  roles:
+    - { role: k8s.master, tags: ['k8s', 'k8sM'] }
+
+- name: K8S - Slaver
+  hosts: k8sS
+  gather_facts: false
+  become_user: "{{ K8S_USER }}"
+  roles:
+    - { role: k8s.slaver, tags: ['k8s', 'k8sS'] }
+
+# Here, must implement to check if atleast 3 nodes for ingress controller
+- name: Install ingress controller
+  hosts: k8sM
+  gather_facts: false
+  tags: ['ingress-nginx']
+  tasks:
+    - shell: |
+        helm upgrade --install ingress-nginx ingress-nginx \
+        --repo https://kubernetes.github.io/ingress-nginx \
+        --namespace ingress-nginx --create-namespace \
+        --set controller.hostNetwork=true,controller.kind=DaemonSet
+        # --set controller.hostNetwork=true,controller.kind=DaemonSet,controller.service.type=NodePort \
+        # --set controller.hostNetwork=true,controller.service.type="",controller.kind=DaemonSet
+    - name: remove ValidatingWebhookConfiguration
+      shell: kubectl delete -A ValidatingWebhookConfiguration ingress-nginx-admission
+
+# - name: K8S - Util
+#   hosts: k8sM
+#   roles:
+#     - { role: k8s.util, tags: ['k8s', 'k8sM'] }

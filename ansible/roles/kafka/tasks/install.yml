@@ -1,0 +1,31 @@
+
+- set_fact:
+    file_name: "{{ DOWNLOAD_URL_KAFKA | split('/') | last }}"
+    folder_name: "{{ DOWNLOAD_URL_KAFKA | split('/') | last | replace('.tgz', '') }}"
+
+- name: Check if already download
+  stat:
+    path: "{{ BASE_DIR }}/{{ folder_name }}"
+  register: pkgsrc
+
+- name: Download 
+  get_url:
+    url: "{{ DOWNLOAD_URL_KAFKA }}"
+    dest: "~"
+  when: not pkgsrc.stat.exists
+
+- name: UnZip tarball
+  unarchive:
+    remote_src: yes
+    src: "{{ item }}"
+    dest: "{{ BASE_DIR }}"
+    mode: 0755
+  with_items:
+  - "~/{{ file_name }}"
+  when: not pkgsrc.stat.exists
+
+- name: Create symbolic link
+  file:
+    src: "{{ BASE_DIR }}/{{ folder_name }}"
+    dest: "{{ KAFKA_HOME }}"
+    state: link

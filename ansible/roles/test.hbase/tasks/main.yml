@@ -1,0 +1,79 @@
+---
+- set_fact: directory="~/hbase-test" jobname="hbase-test" registry="{{ DOCKER_REGISTRY }}"
+
+- name: If Hbase running
+  wait_for:
+    host: "{{ groups['namenode'][0] }}"
+    port: 9090
+    delay: 5
+    timeout: 15
+    state: started
+    msg: "Hbase is not running, please start Hbase first, or play provision.yml --tags hbase"
+
+- name: System - create directory
+  file:
+    path: "{{ directory }}"
+    state: directory
+  
+- name: System - Upload Dockerfile template
+  template:
+    src: "files/Dockerfile"
+    dest: "{{ directory }}"
+  
+- name: System - Upload files
+  copy:
+    src: "{{ item }}"
+    dest: "{{ directory }}"
+  with_fileglob:
+  - "files/hbase.py"
+  - "files/requirements.txt"
+
+- name: System - install python module
+  pip:
+    name: "{{ item }}"
+  with_items:
+  - "docker"
+  - "k8s"
+  - "kubernetes"
+  - "docker-compose"
+
+- name: "Docker - login docker registry {{ registry }}/"
+  docker_login: username="{{ DOCKER_USER }}" password="{{ DOCKER_PASS }}"
+
+- name: Docker - build image and tag and push to registry
+  community.docker.docker_image:
+    name: "{{ jobname }}"
+    repository: "{{ registry }}/{{ jobname }}"
+    build:
+      path:  "{{ directory }}"
+    source: build
+    push: yes
+    force_absent: true
+    force_tag: true
+    force_source: true
+
+- name: k8s - create pod template
+  template:
+    dest: "~/job-{{ jobname }}.yml"
+    src: "job-{{ jobname }}.yml.j2"
+
+- name: k8s - create pod
+  shell: "kubectl --namespace {{ K8S_DEFAULE_NAMESPACE }} apply -f ~/job-{{ jobname }}.yml"
+
+- name: k8s - Wait for 10sec
+  wait_for: "timeout=10"
+
+- name: k8s verify job if run as expect.
+  shell: "kubectl logs job.batch/{{ jobname }}"
+  register: log
+  failed_when: "'Done' not in log.stdout"
+
+- debug: var=log
+
+- name: k8s - delete job
+  kubernetes.core.k8s:
+    state: absent
+    api_version: v1
+    kind: Job
+    namespace: "{{ K8S_DEFAULE_NAMESPACE }}"
+    name: "{{ jobname }}"

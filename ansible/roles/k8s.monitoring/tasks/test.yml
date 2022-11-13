@@ -1,0 +1,29 @@
+- set_fact:
+    cmd: "kubectl get pods --selector=app=http-request-total --no-headers|wc -l"
+
+- name: "Check http-requst-total pod should scaleOut"
+  shell: "{{ cmd }}"
+  register: result
+  failed_when: result.stdout != "1"
+
+- name: "Stress Test"
+  shell: "hey -n 90000 -m GET http://{{ RESOURCE_PREFIX }}{{ groups['nodes'] | length }}:{{ nodeport }}/metrics"
+  register: result
+
+- debug: msg="{{ result.stdout_lines }}"
+
+- name: "Check http-requst-total pod should scaleOut"
+  shell: "{{ cmd }}"
+  register: result
+  failed_when: result.stdout == "1"
+
+- debug:
+    msg: "http-requst-total have {{ result.stdout }} pods"
+
+- name: "Wait for 60 seconds for ScaleIn"
+  wait_for: timeout=60
+
+- name: "Check http-request-total pod should scaleIn"
+  shell: "{{ cmd }}"
+  register: result
+  failed_when: result.stdout != "1"

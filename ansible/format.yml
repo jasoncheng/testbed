@@ -1,0 +1,8 @@
+- name: format all
+  hosts: all
+  gather_facts: false
+  roles:
+    - { role: hadoop.format, tags: ['format-hadoop'] }
+    - { role: hbase.format, tags: ['format-hbase'] }
+    - { role: zookeeper.format, tags: ['format-zookeeper'] }
+    - { role: k8s.format, tags: ['format-k8s']}

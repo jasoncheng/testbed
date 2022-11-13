@@ -1,0 +1,7 @@
+service_type: mds
+service_id: {{ CEPHFS }}
+placement:
+  count: {{ MDS_STANDBY_COUNT + groups['ceph'] | length}}
+  hosts:
+  {% for i in groups['ceph'] %}- {{ i }}
+  {% endfor %}

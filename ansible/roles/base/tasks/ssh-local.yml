@@ -1,0 +1,41 @@
+
+- set_fact: sshIncludeDir="~/.ssh/config.d" localUser="{{ lookup('env', 'USER') }}"
+  tags: ['local-ssh']
+
+- name: Local - Copy server private key to ~/.ssh
+  tags: ['local-ssh']
+  become_user: "{{ localUser }}"
+  copy:
+    src: "../terraform/{{ RESOURCE_PREFIX }}.pem"
+    dest: "~/.ssh/"
+    mode: 0400
+  delegate_to: localhost
+
+- name: Local - Update ssh ~/.ssh/config.d folder
+  tags: ['local-ssh']
+  become_user: "{{ localUser }}"
+  lineinfile:
+    path: "~/.ssh/config"
+    regexp: "^Include "
+    line: "Include config.d/*"
+    insertbefore: BOF
+  delegate_to: localhost
+
+
+- name: Local - Create .ssh/config.d folder
+  tags: ['local-ssh']
+  become_user: "{{ localUser }}"
+  file:
+    path: "{{ sshIncludeDir }}"
+    state: directory
+  delegate_to: localhost
+
+- name: Local - Create local ssh config files
+  tags: ['local-ssh']
+  become_user: "{{ localUser }}"
+  template:
+    src: "templates/ssh_template.j2"
+    dest: "{{ sshIncludeDir }}/{{ RESOURCE_PREFIX }}.conf"
+    mode: 0644
+  delegate_to: localhost
+  

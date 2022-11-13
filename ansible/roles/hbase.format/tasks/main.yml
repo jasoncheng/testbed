@@ -1,0 +1,8 @@
+
+- name: delete /tmp/hbase*
+  file:
+    state: absent
+    path: "{{ item }}"
+  with_items:
+    - "/tmp/hbase-root/"
+    - "/tmp/hbase*"

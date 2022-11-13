@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-with-raw-block-volume
+  namespace: {{ K8S_DEFAULE_NAMESPACE }}
+  labels:
+    app: csi-ceph-jason
+spec:
+  containers:
+    - name: busybox
+      image: busybox
+      command: ["sleep", "infinity"]
+      volumeMounts:
+        - name: data
+          mountPath: /mnt/ceph_rbd
+      #volumeDevices:
+      #  - name: data
+      #    devicePath: /dev/ceph_rbd
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: raw-block-pvc
+        readOnly: false

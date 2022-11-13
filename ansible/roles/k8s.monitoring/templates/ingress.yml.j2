@@ -1,0 +1,37 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: monitor-ingress
+  namespace: {{ prometheus_namespace }}
+  annotations:
+    nginx.org/proxy-connect-timeout: "30s"
+    nginx.org/proxy-read-timeout: "30s"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+spec:
+  ingressClassName: nginx
+  defaultBackend:
+    service:
+      name: prometheus-stack-grafana
+      port:
+        number: 80
+  rules:
+  - host: {{ RESOURCE_PREFIX }}2
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: prometheus-stack-kube-prom-prometheus
+            port:
+              number: 9090
+  - host: {{ RESOURCE_PREFIX }}1
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: prometheus-stack-grafana
+            port:
+              number: 80

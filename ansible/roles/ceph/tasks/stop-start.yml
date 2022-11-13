@@ -1,0 +1,11 @@
+- name: Stop service
+  service:
+    name: ceph.target
+  tags: ['stop', 'stop-ceph']
+  when: "'all' not in ansible_run_tags"
+
+- name: Start service
+  service:
+    name: ceph.target
+  tags: ['start', 'start-ceph']
+  when: "'all' not in ansible_run_tags"

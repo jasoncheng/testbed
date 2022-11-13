@@ -1,0 +1,6 @@
+- name: Health check 
+  hosts: all
+  gather_facts: false
+  tags: ['always']
+  roles:
+  - { role: health }

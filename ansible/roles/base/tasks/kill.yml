@@ -1,0 +1,21 @@
+- name: Get running processes list from remote host
+  ignore_errors: true
+  shell: "ps -few | grep {{ proc_name }} | awk '{print $2}'"
+  register: running_processes
+
+- name: Kill running processes
+  ignore_errors: true
+  shell: "kill {{ item }}"
+  with_items: "{{ running_processes.stdout_lines }}"
+
+- wait_for:
+    path: "/proc/{{ item }}/status"
+    state: absent
+  with_items: "{{ running_processes.stdout_lines }}"
+  ignore_errors: true
+  register: crunchify_processes
+ 
+- name: Force kill stuck processes
+  ignore_errors: true
+  shell: "kill -9 {{ item }}"
+  with_items: "{{ crunchify_processes.results | select('failed') | map(attribute='item') | list }}"

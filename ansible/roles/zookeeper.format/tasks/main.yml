@@ -1,0 +1,4 @@
+- name: delete zk folder
+  file:
+    state: absent
+    path: "{{ ZK_HOME }}/"

@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ jobname }}
+spec:
+  ttlSecondsAfterFinished: 60
+  template:
+    metadata:
+      name: {{ jobname }}
+      labels:
+        purpose: {{ jobname }}
+    spec:
+      hostNetwork: true
+      hostAliases:
+
+      {% for host in groups['nodes'] %}
+  - ip: "{{ hostvars[host].ansible_host }}" 
+          hostnames:
+          - "{{ host }}"
+      {% endfor %}
+
+      containers:
+      - name: {{ jobname }}
+        image: {{ registry }}/{{ jobname }}
+      restartPolicy: Never

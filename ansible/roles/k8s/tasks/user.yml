@@ -1,0 +1,16 @@
+- name: create user kube
+  user: name={{ K8S_USER }} append=yes state=present createhome=yes groups=root shell=/bin/bash
+  when: K8S_USER != OS_USER
+
+- name: sudo without password
+  lineinfile:
+    dest: /etc/sudoers
+    line: "{{ K8S_USER }} ALL=(ALL) NOPASSWD: ALL"
+    validate: "visudo -cf %s"
+  when: K8S_USER != OS_USER
+
+- name: set authorized keys
+  become_user: "{{ K8S_USER }}"
+  authorized_key: user={{ K8S_USER }} key="{{ item }}"
+  with_file:
+    - "../terraform/{{ RESOURCE_PREFIX }}.pub"

@@ -1,0 +1,110 @@
+- name: Upgrade all apt packages
+  become: true
+  apt: upgrade=dist force_apt_get=yes
+
+- name: Install hey module for stress testing
+  become: true
+  apt:
+    pkg:
+    - "hey"
+
+- name: Install pip package
+  ansible.builtin.pip:
+    name: "{{ item }}"
+  with_items:
+  - "kubernetes"
+  - "docker"
+
+- name: Add repo of Prometheus and Grafana
+  kubernetes.core.helm_repository:
+    name: prometheus-community
+    repo_url: "{{ chart_prometheus }}"
+  
+- name: Add repo of Keda
+  kubernetes.core.helm_repository:
+    name: kedacore
+    repo_url: "{{ chart_keda }}"
+
+- set_fact:
+    value_file: "prometheus-values-{{ prometheus_stack_version }}.yaml"
+
+- name: Upload file
+  copy:
+    src: "{{ playbook_dir }}/roles/{{ role_name }}/files/{{ value_file }}"
+    dest: "/tmp/{{ value_file }}"
+
+- name: Setup grafana password
+  lineinfile:
+    regexp: "  adminPassword"
+    line: "  adminPassword: {{ grafana_password }}"
+    path: "/tmp/{{ value_file }}"
+# - name: Install Prometheus and Grafana w/ predefined scrape config
+#   kubernetes.core.helm:
+#     name: prometheus-stack
+#     chart_ref: prometheus-community/kube-prometheus-stack
+#     release_namespace: prometheus-stack
+#     create_namespace: true
+#     update_repo_cache: true
+#     values_files:
+#     - "/tmp/base.yml"
+#     # values:
+#     #   prometheus.path: "/prom"
+#     #   grafana.path: "/grafana"
+#   register: result
+
+- name: "Create namespace {{ prometheus_namespace }}"
+  shell: "kubectl create ns {{ prometheus_namespace }}"
+  ignore_errors: true
+
+# - name: Iptables for allow ALL
+#   become: true
+#   become_user: root
+#   shell: |
+#     iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X
+
+- name: Check resource dir if exists
+  stat:
+    path: "{{ tmpDir }}"  
+  register: dirStat
+
+- name: Delete previous apply resources
+  shell: |
+    kubectl delete -f {{ tmpDir }}
+  when: dirStat.stat.exists
+  ignore_errors: true
+
+- name: Remove hook
+  shell: |
+    kubectl delete -A ValidatingWebhookConfiguration prometheus-stack-kube-prom-admission || true
+
+- name: TODO - remove scaledobject
+  shell: "kubectl delete scaledobject/http-request-total-scaledobject -n {{ K8S_DEFAULE_NAMESPACE }} || true"
+
+- name: Install Keda
+  shell: |
+    helm uninstall keda -n keda
+  ignore_errors: true
+
+- name: Install Prometheus and Grafana w/ predefined scrape config
+  shell: |
+    helm upgrade --install -f /tmp/prometheus-values-{{ prometheus_stack_version }}.yaml prometheus-stack prometheus-community/kube-prometheus-stack \
+      -n {{ prometheus_namespace }} --version {{ prometheus_stack_version }} --create-namespace
+      # --no-hooks
+      # --set prometheusOperator.admissionWebhooks.enabled=false \
+      # --set prometheusOperator.admissionWebhooks.patch.enabled=false \
+      # --set prometheusOperator.tlsProxy.enabled=false
+    # helm upgrade --install -f /tmp/base.yml prometheus-stack prometheus-community/kube-prometheus-stack -n prometheus-stack --version 41.7.3 --create-namespace
+    # helm upgrade --install -f /tmp/base.yml prometheus-stack prometheus-community/kube-prometheus-stack -n prometheus-stack --version 40.3.1 --create-namespace
+
+# - name: Install Keda
+#   kubernetes.core.helm:
+#     name: keda
+#     chart_ref: kedacore/keda
+#     release_namespace: keda
+#     create_namespace: true
+#     update_repo_cache: true
+#   register: result
+
+- name: Install Keda
+  shell: |
+    helm upgrade --install keda kedacore/keda --namespace keda --create-namespace

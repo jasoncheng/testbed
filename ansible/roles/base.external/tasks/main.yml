@@ -1,0 +1,66 @@
+# - debug: var="{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
+
+# - debug: var=hostvars[inventory_hostname]['ansible_host']
+
+- name: update etc/hosts
+  tags: ['base']
+  lineinfile:
+    dest: "/etc/hosts"
+    regexp: "\t{{ item }}$"
+    line: "{{ hostvars[item]['ansible_host'] }}\t{{ item }}"
+    backup: true
+    state: present
+  ignore_errors: true
+  with_items: "{{ groups['all'] }}"
+
+- name: apt install
+  apt:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - openjdk-11-jdk
+  when: inventory_hostname not in groups['nodes']
+
+- name: touch env file
+  file:
+    mode: 0755
+    path: "{{ ENV_FILE_SOURCE }}"
+    state: touch
+  when: inventory_hostname not in groups['nodes']
+
+- name: "Set {{ ENV_FILE_SOURCE }} "
+  blockinfile:
+    insertafter: EOF
+    dest: "{{ ENV_FILE_SOURCE }}"
+    block: |
+      export {{ item.name }}="{{ item.line }}"
+    marker: "\n# {mark} ansible manage block {{ item.name }}"
+    backup: true
+  with_items:
+  - { name: "JAVA_HOME", line: "{{ JAVA_HOME }}" }
+  - { name: "PATH", line: "$PATH:$JAVA_HOME/bin"}
+  when: inventory_hostname not in groups['nodes']
+  
+- name: Config Remote SSH
+  tags: ["base", "always"]
+  include_role:
+    name: base
+    tasks_from: ssh-servers.yml
+
+- name: Config Local SSH
+  when: inventory_hostname == groups['nodes'][0]
+  tags: ["base", "always"]
+  include_role:
+    name: base
+    tasks_from: ssh-local.yml
+
+- name: add  {{ K8S_USER }}  to docker group
+  user:
+    name: "{{ K8S_USER }}"
+    groups: ["docker"]
+    append: yes
+  ignore_errors: true
+  when:
+  - K8S_USER != OS_USER
+  - inventory_hostname not in groups['nodes']

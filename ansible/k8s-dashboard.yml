@@ -1,0 +1,6 @@
+---
+- name: k8s dashboard
+  hosts: k8sM
+  gather_facts: false
+  roles:
+  - { role: k8s.dashboard, tags: ['always'] }

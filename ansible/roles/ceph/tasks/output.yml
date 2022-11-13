@@ -1,0 +1,24 @@
+
+- shell: ceph auth get-key client.{{ CEPHFS_CLIENT }}
+# - shell: ceph auth get-key client.admin
+  register: result
+
+- set_fact: clientKey="{{ result.stdout }}"
+
+- shell: cephadm shell ceph fsid | tail -n1
+  register: result
+
+- set_fact: fsid="{{ result.stdout }}"
+
+- shell: ceph mon stat|awk '{print $(NF)}'
+  register: result
+
+- set_fact: mon="{{ result.stdout }}"
+
+- name: k8s csi key
+  debug:
+    msg: "account client.{{ CEPHFS_CLIENT }}, key {{ clientKey }}, fsid: {{ fsid }}, mon: {{ mon }}"
+
+- name: Ceph Dashboard
+  debug:
+    msg: "https://{{ inventory_hostname }}:8443, {{ CEPH_USER }} / {{ CEPH_PASS }}"

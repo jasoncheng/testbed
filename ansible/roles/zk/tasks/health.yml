@@ -1,0 +1,30 @@
+
+- name: ruok
+  shell: "echo ruok | nc localhost 2181"
+  register: isok
+  failed_when: isok.stdout != "imok"
+
+- name: jps command should include QuorumPeerMain
+  become: true
+  shell: "jps"
+  register: jps
+  failed_when: "'QuorumPeer' not in jps.stdout"
+
+- name: Fetch mntr and should not have empty response
+  shell: "echo mntr | nc localhost 2181"
+  register: mntr
+  failed_when: mntr.stdout == ""
+
+- name: "zk_pending_syncs should equal 0"
+  debug:
+    msg: "zk_pending_syncs should equal 0"
+  failed_when: mntr.stdout is regex('zk_outstanding_requests.* 0', ignorecase=True)
+
+- set_fact:
+    zk_max_file_descriptor_count="{{ mntr.stdout | regex_search('zk_max_file_descriptor_count\t([0-9]{1,})', '\\1') | first }}"
+    zk_open_file_descriptor_count="{{ mntr.stdout | regex_search('zk_open_file_descriptor_count\t([0-9]{1,})', '\\1') | first }}"
+
+- name: "zk_max_file_descriptor_count({{ zk_max_file_descriptor_count}}) != zk_open_file_descriptor_count({{ zk_open_file_descriptor_count }})"
+  debug:
+    msg: "file_descriptor okay."
+  failed_when: zk_max_file_descriptor_count == zk_open_file_descriptor_count

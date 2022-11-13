@@ -1,0 +1,11 @@
+- name: ZK
+  include_role:
+    tasks_from: health.yml
+    name: zk
+  when: "'zk' in ansible_run_tags"
+
+- name: Ceph
+  include_role:
+    tasks_from: health.yml
+    name: ceph
+  when: "'ceph' in ansible_run_tags"

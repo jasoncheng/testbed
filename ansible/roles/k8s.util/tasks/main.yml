@@ -1,0 +1,12 @@
+
+# - name: Support kubectl top command
+#   become_user: "{{ K8S_USER }}"
+#   shell: 'kubectl --namespace kube-system apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml'
+
+# - name: Test top command
+#   become_user: "{{ K8S_USER }}"
+#   shell: 'kubectl top node'
+#   register: topResult
+#   ignore_errors: true
+
+# - debug: var=topResult.stdout_lines

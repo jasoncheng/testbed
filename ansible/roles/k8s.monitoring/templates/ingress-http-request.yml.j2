@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: default-monitor-ingress
+  namespace: "{{ K8S_DEFAULE_NAMESPACE }}"
+  annotations:
+    ingress.kubernetes.io/rewrite-target: /$1
+    nginx.org/proxy-connect-timeout: "30s"
+    nginx.org/proxy-read-timeout: "30s"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+spec:
+  ingressClassName: nginx
+  defaultBackend:
+    service:
+      name: http-request-total
+      port:
+        number: 9121
+  rules:
+  - host: {{ RESOURCE_PREFIX }}3
+    http:
+      paths:
+      - path: /(|$)(.*)
+        pathType: Prefix
+        backend:
+          service:
+            name: http-request-total
+            port:
+              number: 9121

@@ -1,0 +1,13 @@
+- name: k8s-ansible-operator
+  # tags: ['test-k8s-operator-ansible']
+  include_role:
+    name: "test.k8s.operator"
+    tasks_from: ansible-operator.yml
+  when: "'test-k8s-operator-ansible' in ansible_run_tags or 'all' in ansible_run_tags"
+
+- name: k8s-go-operator
+  tags: ["test-k8s-operator-go"]
+  include_role:
+    name: test.k8s.operator
+    tasks_from: go-operator.yml
+  when: "'test-k8s-operator-go' in ansible_run_tags or 'all' in ansible_run_tags"

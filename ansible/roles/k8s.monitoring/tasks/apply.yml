@@ -1,0 +1,22 @@
+- set_fact: prefix="http-request-"
+
+- name: Create Directory
+  file:
+    state: directory
+    path: "{{ tmpDir }}"
+  
+- name: Create templates
+  template:
+    dest: "{{ tmpDir }}/{{ prefix }}{{ item | replace('.j2', '') }}"
+    src: "{{ item }}"
+  with_items:
+  - "app.yml.j2"
+  - "scaledobject.yml.j2"
+  - "service.yml.j2"
+  - "ingress-http-request.yml.j2"
+  - "ingress.yml.j2"
+  register: result
+
+- name: Kubectl apply
+  shell: "kubectl apply -f {{ item.dest }}"
+  loop: "{{ result.results | flatten(levels=1) }}"

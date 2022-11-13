@@ -1,0 +1,63 @@
+- name: create data folder
+  file: path={{ ZK_HOME }}/data state=directory
+
+- name: create logs folder
+  file: path={{ ZK_HOME }}/logs state=directory
+
+- name: create myid
+  vars:
+    current_index: "{{ inventory_hostname | replace(RESOURCE_PREFIX, '') }}"
+  shell: "echo {{ current_index }} > {{ ZK_HOME }}/data/myid"
+  
+- name: copy config file
+  copy:
+    remote_src: yes
+    src: "{{ ZK_HOME }}/conf/zoo_sample.cfg"
+    dest: "{{ ZK_HOME }}/conf/zoo.cfg"
+
+- name: update config
+  lineinfile:
+    path: "{{ ZK_HOME }}/conf/zoo.cfg"
+    regexp: "^{{ item.key }}"
+    line: "{{ item.key }}={{ item.value }}"
+    insertafter: EOF
+  with_items:
+    - { key: "dataDir", value: "{{ ZK_HOME }}/data"}
+    - { key: "dataLogDir", value: "{{ ZK_HOME }}/logs"}
+    - { key: "4lw.commands.whitelist", value: "*" }
+
+- name: update config server list
+  vars:
+    idx: "{{ item | replace(RESOURCE_PREFIX, '') }}"
+  lineinfile:
+    path: "{{ ZK_HOME }}/conf/zoo.cfg"
+    regexp: "server.{{ idx }}"
+    line: "server.{{ idx }}={{ item }}:2888:3888"
+    insertafter: EOF
+  with_inventory_hostnames:
+    - nodes
+
+- name: Create a Service file for ZooKeeper with Copy module
+  copy:
+    dest: /etc/systemd/system/zk.service
+    content: |
+      [Unit]
+      # Requires=network.target
+      # After=network.target
+      
+      [Service]
+      Type=simple
+      User=root
+      ExecStart={{ ZK_HOME }}/bin/zkServer.sh start {{ ZK_HOME }}/conf/zoo.cfg
+      ExecStop={{ ZK_HOME }}/bin/zkServer.sh stop
+      Restart=on-abnormal
+      
+      [Install]
+      WantedBy=multi-user.target
+    mode: 0755
+
+- shell: 'systemctl daemon-reload'
+  name: "systemctl daemon-reload"
+
+- shell: 'systemctl disable zk.service'
+  name: "systemctl disable zk.service"

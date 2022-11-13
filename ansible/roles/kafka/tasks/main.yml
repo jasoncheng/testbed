@@ -1,0 +1,80 @@
+- name: KafkaInstall
+  include_role:
+    name: kafka
+    tasks_from: install.yml
+
+- name: KafkaConfig
+  include_role:
+    name: kafka
+    tasks_from: config.yml
+
+- name: Stop Kafka
+  tags: ['stop', 'stop-kafka']
+  systemd:
+    name: "{{ item }}"
+    state: stopped
+  with_items:
+    - "kafka"
+  ignore_errors: true
+
+- name: Start Kafka
+  tags: ['start', 'start-kafka']
+  systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  with_items:
+    - "kafka"
+  register: result
+
+- name: Validating if kafka running
+  tags: ['start', 'start-kafka']
+  wait_for:
+    host: localhost
+    port: 9092
+    delay: 10
+    timeout: 30
+    state: started
+    msg: "kafka started."
+
+- set_fact: bootstrap="{{ groups['zk'] | join(':9092,') }}:9092"
+
+- name: Create topic (demo)
+  vars:
+    ansible_command_timeout: 60
+  ignore_errors: true
+  # shell: ". {{ ENV_FILE_SOURCE }} && kafka-topics.sh --create --bootstrap-server {{ bootstrap }} --replication-factor 1 --partitions 0 --topic demo3"
+  shell: ". {{ ENV_FILE_SOURCE }} && kafka-topics.sh --create --bootstrap-server {{ bootstrap }} --replication-factor 2 --partitions 2 --topic demo4"
+  when: "inventory_hostname in groups['kafkaBroker'][0]"
+
+# - name: Purge topic
+#   shell: ". {{ ENV_FILE_SOURCE }} && kafka-topics.sh --bootstrap-server {{ bootstrap }} --delete --topic demo4"
+#   ignore_errors: true
+#   when: "inventory_hostname in groups['kafkaBroker'][0]"
+
+- name: List topic
+  vars:
+    ansible_command_timeout: 60
+  ignore_errors: true
+  shell: ". {{ ENV_FILE_SOURCE }} && kafka-topics.sh --bootstrap-server {{ bootstrap }} --list"
+  register: result
+  when: "inventory_hostname in groups['kafkaBroker'][0]"
+
+- debug: var=result.stdout_lines
+  when: "inventory_hostname in groups['kafkaBroker'][0]"
+
+- name: Validating if kafka running
+  wait_for:
+    host: localhost
+    port: 9092
+    delay: 10
+    timeout: 30
+    state: started
+    msg: "Kafka started"
+  when: "inventory_hostname in groups['kafkaBroker']"
+
+- name: Setup WebUI
+  include_role:
+    name: kafka
+    tasks_from: ui.yml
+  when: "inventory_hostname in groups['kafkaBroker'][0]"

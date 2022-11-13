@@ -1,0 +1,21 @@
+- name: Create user
+  include_role:
+    name: k8s
+    tasks_from: user.yml
+
+- name: Create .kube directory
+  become: true
+  become_user: root
+  file:
+    path: "{{ item.path }}"
+    state: directory
+    mode: 0755
+    owner: "{{ item.owner }}"
+  with_items:
+  - { "owner": "root", "path": "/root/.kube" }
+  - { "owner": "{{ K8S_USER }}", "path": "/home/{{ K8S_USER }}/.kube" }
+
+- name: Install and config
+  include_role:
+    name: k8s
+    tasks_from: install.yml

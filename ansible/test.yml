@@ -1,0 +1,36 @@
+---
+- name: "Test > hadoop + zookeeper + pyspark + k8s pod "
+  hosts: builder
+  gather_facts: false
+  roles:
+  - { role: test.spark, tags: ['test-spark'] }
+
+- name: "Test > kafka + python kafka + k8s pod"
+  hosts: builder
+  gather_facts: false
+  roles:
+  - { role: test.kafka, tags: ['test-kafka'] }
+
+- name: "Test > hbase + python happybase + k8s job"
+  hosts: builder
+  gather_facts: false
+  roles:
+  - { role: test.hbase, tags: ['test-hbase'] }
+
+- name: "Test > k8s ingress"
+  hosts: nodes[0]
+  gather_facts: false
+  roles:
+  - { role: test.k8s.ingress, tags: ['test-k8s-ingress'] }
+
+- name: "Test > k8s.operator"
+  hosts: localhost
+  gather_facts: false
+  roles:
+  - { role: test.k8s.operator, tags: ['always'] }
+
+- name: "Test > k8s.csi.ceph"
+  hosts: ceph[0]
+  gather_facts: true
+  roles:
+  - { role: test.k8s.csi.ceph, tags: ['always'] }

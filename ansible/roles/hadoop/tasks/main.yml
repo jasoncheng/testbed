@@ -1,0 +1,66 @@
+- name: HadoopInstall
+  include_role:
+    name: hadoop
+    tasks_from: install.yml
+
+- name: HadoopConfig
+  include_role:
+    name: hadoop
+    tasks_from: config.yaml
+
+# - name: HadoopFormat
+#   include_role:
+#     name: hadoop
+#     tasks_from: format.yml
+#     apply:
+#       tags: ['format']
+#   tags: ['always']
+
+- name: HadoopConfig cluster master and slaver
+  tags: ['clusters']
+  include_role:
+    name: hadoop
+    tasks_from: masterslaver.yml
+
+- name: stop all daemon
+  tags: ['stop-hadoop', 'stop']
+  ignore_errors: true
+  shell: '. {{ ENV_FILE_SOURCE }} && stop-all.sh'
+  register: hadoop_stop_log
+
+- debug: var=hadoop_stop_log
+  when: "'stop' in ansible_run_tags"
+
+- name: check if namenode did init
+  stat:
+    path: "{{ DIR_NAME }}/current"
+  register: is_namenode_setup
+  when: inventory_hostname == groups['namenode'][0]
+
+- name: format namenode
+  shell: ". {{ ENV_FILE_SOURCE }} && hadoop namenode -format -force"
+  register: result
+  when:
+  - is_namenode_setup.stat is defined and not is_namenode_setup.stat.exists
+  - inventory_hostname == groups['namenode'][0]
+
+- name: start all daemon
+  tags: ['start-hadoop', 'start']
+  ignore_errors: true
+  shell: '. {{ ENV_FILE_SOURCE }} && start-all.sh'
+  register: hadoop_start_log
+
+- debug: var=hadoop_start_log
+
+- shell: ". {{ ENV_FILE_SOURCE }} && jps"
+  name: list hadoop service
+  tags: ['hadoop-start', 'start', 'stop']
+  register: jpsinfo
+
+- debug: var=jpsinfo.stdout
+  tags: ['hadoop-start', 'start', 'stop']
+
+- name: Verify Cluster
+  include_role:
+    name: hadoop
+    tasks_from: verify.yml

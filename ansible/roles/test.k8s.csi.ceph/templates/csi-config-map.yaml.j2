@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+data:
+  config.json: |-
+    [
+        {
+            "clusterID": "{{ fsid }}",
+            "monitors": [
+            {% for m in mon %}
+              "{{ hostvars[m]['ansible_default_ipv4']['address'] }}:6789"{% if mon[mon|length - 1] == m %}{% else %},
+            {% endif %}
+            {% endfor %}
+            ]
+        }
+    ]
+metadata:
+  name: "ceph-csi-config"

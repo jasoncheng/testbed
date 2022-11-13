@@ -1,0 +1,3 @@
+create new YOUR_VARS.tf file, override you variables, then ....
+
+    $ terraform apply -var-file=vars/YOUR_VARS.tf 

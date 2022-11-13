@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka-ui-service
+  namespace: "{{ K8S_DEFAULE_NAMESPACE }}"
+spec:
+  type: NodePort
+  selector:
+    app: kafka-ui
+  ports:
+    - protocol: TCP
+      port: 8088
+      nodePort: {{ KAFKA_UI_PORT }}
+      targetPort: {{ KAFKA_UI_INTERNAL_PORT }}

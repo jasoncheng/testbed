@@ -1,0 +1,44 @@
+- uri:
+    url: "{{ DOWNLOAD_URL_HADOOP }}.sha512"
+    return_content: true
+  register: url_sha512
+
+- set_fact:
+    artemis_checksum: "{{ url_sha512.content.split(' ')[3] }}"
+    file_name: "{{ DOWNLOAD_URL_HADOOP | split('/') | last }}"
+    folder_name: "{{ DOWNLOAD_URL_HADOOP | split('/') | last | replace('.tar.gz', '') }}"
+
+- debug: var=artemis_checksum
+
+- name: Check if already download
+  stat:
+    path: "{{ BASE_DIR }}/{{ folder_name }}"
+  register: hadoop_src
+
+- name: Download 
+  get_url:
+    url: "{{ DOWNLOAD_URL_HADOOP }}"
+    dest: "~"
+    checksum: "sha512:{{ artemis_checksum }}"
+  when: not hadoop_src.stat.exists
+
+- name: UnZip tarball
+  unarchive:
+    remote_src: yes
+    src: "{{ item }}"
+    dest: "{{ BASE_DIR }}"
+    mode: 0755
+  with_items:
+  - "~/{{ file_name }}"
+  when: not hadoop_src.stat.exists
+
+- name: Create symbolic link
+  file:
+    src: "{{ BASE_DIR }}/{{ folder_name }}"
+    dest: "{{ HADOOP_HOME }}"
+    state: link
+
+# - name: Touch env file
+#   file:
+#     path: "{{ ENV_FILE }}"
+#     state: touch

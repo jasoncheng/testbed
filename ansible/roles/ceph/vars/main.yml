@@ -1,0 +1,7 @@
+# CEPH_RELEASE: 'quincy'
+# CEPH_CLUSTER_DIR: '{{ CEPH_HOME }}/cluster'
+# CEPH_APT_RELEASE_KEY: 'https://download.ceph.com/keys/release.asc'
+# CEPH_REPO: 'https://download.ceph.com/debian-{{ CEPH_RELEASE }}/'
+CEPH_USER: 'admin'
+CEPH_PASS: '123456'
+MDS_STANDBY_COUNT: 3

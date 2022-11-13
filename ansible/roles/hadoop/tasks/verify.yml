@@ -1,0 +1,36 @@
+# - set_fact: tmp_file_name="tmp_jason"
+- set_fact: tmp_file_name="twitter_sentiments.csv"
+
+# - name: touch file
+#   file:
+#     path: "{{ tmp_file_name }}"
+#     state: touch
+- name: upload test file
+  copy:
+    src: "files/{{ tmp_file_name }}"
+    dest: "~/"
+  when: inventory_hostname == groups['namenode'][0]
+  
+- name: "turn off savemode"
+  shell: ". {{ ENV_FILE_SOURCE }} && hdfs dfsadmin -safemode leave"
+  when: inventory_hostname == groups['namenode'][0]
+  ignore_errors: true
+
+- name: "hdfs delete {{ tmp_file_name }} file is exists"
+  shell: ". {{ ENV_FILE_SOURCE }} && hdfs dfs -rm -R /{{ tmp_file_name }}"
+  when: inventory_hostname == groups['namenode'][0]
+  ignore_errors: true
+
+- name: hdfs put file
+  shell: ". {{ ENV_FILE_SOURCE }} && hdfs dfs -put ~/{{ tmp_file_name }} /"
+  when: inventory_hostname == groups['namenode'][0]
+
+- name: hdfs check file
+  shell: ". {{ ENV_FILE_SOURCE }} && hdfs dfs -ls /{{ tmp_file_name }}"
+  when: inventory_hostname == groups['namenode'][0]
+  register: result
+
+# - debug: var="{{ result }}"
+# - name: hdfs delete file
+#   shell: ". {{ ENV_FILE_SOURCE }} && hdfs dfs -rm /{{ tmp_file_name }}"
+#   when: inventory_hostname == groups['namenode'][0]

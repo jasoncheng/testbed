@@ -1,0 +1,28 @@
+- set_fact: folder_name="{{ DOWNLOAD_URL_ZK | split('/') | last | split('.tar.gz') | first }}"
+
+- name: check if already install
+  stat:
+    path: "{{ BASE_DIR }}/{{ folder_name }}"
+  register: pkg_src
+
+- name: Download
+  get_url:
+    url: "{{ DOWNLOAD_URL_ZK }}"
+    dest: "~"
+  when: not pkg_src.stat.exists
+
+- name: unzip
+  unarchive:
+    remote_src: yes
+    src: "{{ item }}"
+    dest: "{{ BASE_DIR }}"
+    mode: 0755
+  with_items:
+  - "/root/{{ DOWNLOAD_URL_ZK | split('/') | last }}"
+  when: not pkg_src.stat.exists
+
+- name: symbolic link
+  file:
+    src: "{{ BASE_DIR }}/{{ folder_name }}"
+    dest: "{{ ZK_HOME }}"
+    state: link

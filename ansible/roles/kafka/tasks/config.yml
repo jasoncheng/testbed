@@ -1,0 +1,59 @@
+- name: Create log folder
+  file:
+    path: "{{ KAFKA_HOME }}/logs"
+    state: directory
+    mode: 0775
+    owner: ubuntu
+    group: root
+
+# - debug: var="{{ inventory_hostname | replace(RESOURCE_PREFIX, '') }}"
+
+- name: Setup broker.id
+  lineinfile:
+    path: "{{ KAFKA_HOME }}/config/server.properties"
+    regexp: "^broker.id"
+    line: "broker.id={{ inventory_hostname | replace(RESOURCE_PREFIX, '') }}"
+    backup: true
+  when: inventory_hostname in groups['kafkaBroker']
+
+- name: Setup zookeeper.connect
+  lineinfile:
+    path: "{{ KAFKA_HOME }}/config/server.properties"
+    regexp: "zookeeper.connect="
+    line: "zookeeper.connect={{ groups['zk'] | join(':2181,') }}:2181"
+    backup: true
+
+- name: ConfigProducer
+  lineinfile:
+    path: "{{ KAFKA_HOME }}/config/producer.properties"
+    regexp: "^bootstrap.servers"
+    line: "bootstrap.servers={{ groups['kafkaBroker'] | join(':9092,') }}:9092"
+    backup: true
+
+- name: ConfigConsumer
+  lineinfile:
+    path: "{{ KAFKA_HOME }}/config/consumer.properties"
+    regexp: "^bootstrap.servers"
+    line: "bootstrap.servers={{ groups['kafkaBroker'] | join(':9092,') }}:9092"
+    backup: true
+
+- name: Create a service file for kafka
+  copy:
+    dest: "/etc/systemd/system/kafka.service"
+    mode: 0755
+    content: |
+      [Unit]
+      Requires=zk.service
+      After=zk.service
+      
+      [Service]
+      Type=simple
+      User=root
+      ExecStart=/bin/sh -c '{{KAFKA_HOME}}/bin/kafka-server-start.sh {{KAFKA_HOME}}/config/server.properties > {{KAFKA_HOME}}/logs/kafka-service.log 2>&1'
+      ExecStop={{KAFKA_HOME}}/bin/kafka-server-stop.sh
+      Restart=on-abnormal
+      
+      [Install]
+      WantedBy=multi-user.target
+
+- shell: 'systemctl daemon-reload'

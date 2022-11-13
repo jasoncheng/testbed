@@ -1,0 +1,49 @@
+- set_fact: isAdmin="{{ inventory_hostname in groups['ceph_adm'] }}"
+- set_fact: nodes="{{ groups['ceph'] | join(" ") }}"
+- set_fact: lvm="/dev/nvme1n1"
+
+# - name: Install Ceph
+#   include_role:
+#     name: ceph
+#     tasks_from: install.yml
+#     apply:
+#       delegate_to: "{{ item }}"
+#   loop_control:
+#     loop_var: item
+#   with_items: "{{ groups['ceph'] }}"
+
+- include_role:
+    name: ceph
+    tasks_from: stop-start.yml
+
+- name: Upgrade ubuntu all packages
+  apt: upgrade=dist force_apt_get=yes
+
+- include_role:
+    name: base
+    tasks_from: reboot.yml
+
+- name: Bootstrap
+  include_role:
+    name: ceph
+    tasks_from: bootstrap.yml
+
+- name: Configure hosts
+  include_role:
+    name: ceph
+    tasks_from: configure.yml
+
+- name: Configure file system
+  include_role:
+    name: ceph
+    tasks_from: fs.yml
+
+- name: Health check
+  include_role:
+    name: ceph
+    tasks_from: health.yml
+
+- name: Show Info
+  include_role:
+    name: ceph
+    tasks_from: output.yml

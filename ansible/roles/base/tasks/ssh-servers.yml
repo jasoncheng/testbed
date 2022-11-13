@@ -1,0 +1,64 @@
+- set_fact:
+    grant_users: ["{{ OS_USER }}", "root"]
+
+- name: permitrootlogin & PubkeyAuthentication
+  become: true
+  lineinfile:
+    path: "/etc/ssh/sshd_config"
+    regex: "^(#)?{{item.key}}"
+    line: "{{item.key}} {{item.value}}"
+    insertafter: EOF
+    state: present
+  with_items:
+  - { key: "PermitRootLogin", value: "yes" }
+  - { key: "PubkeyAuthentication", value: "yes" }
+  notify:
+    restart sshd
+
+- name: Config - create .ssh/config
+  become_user: "{{ item }}"
+  file: 
+    path: "~/.ssh/config"
+    state: touch
+  with_items: "{{ grant_users }}"
+
+- name: disable ssh hostkey checking
+  become_user: "{{ item }}"
+  community.general.ssh_config:
+    user: "{{ item }}"
+    host: "{{ RESOURCE_PREFIX }}*"
+    user_known_hosts_file: /dev/null
+    strict_host_key_checking: no
+  with_items: "{{ grant_users }}"
+
+- name: keygen
+  tags: ['base', 'server-ssh']
+  become_user: "{{ item }}"
+  shell: >
+    ssh-keygen -q -b 2048 -t rsa -N "" -C "creating SSH" -f ~/.ssh/id_rsa creates="~/.ssh/id_rsa"
+  with_items: "{{ grant_users }}"
+
+- name: fetch key file to another server
+  tags: ['base', 'server-ssh']
+  become_user: "{{ item }}"
+  fetch:
+    src: "~/.ssh/id_rsa.pub"
+    dest: "~/.ssh/{{ inventory_hostname }}-{{ item }}-id_rsa.pub"
+    flat: yes
+  with_items: "{{ grant_users }}"
+
+- name: copy key to authorized_keys 
+  tags: ['base', 'server-ssh']
+  become_user: "{{ item[1] }}"
+  authorized_key:
+    user: "{{ item[1] }}"
+    state: present
+    key: "{{ lookup('file', '~/.ssh/{{ item[0] }}-{{ item[1] }}-id_rsa.pub') }}"
+  with_nested:
+  - "{{ groups['all'] }}"
+  - "{{ grant_users }}"
+
+- name: remove please login as ubuntu...
+  become: true
+  become_user: root
+  shell: sed -i -e 's/.*exit 142" \(.*$\)/\1/' ~/.ssh/authorized_keys

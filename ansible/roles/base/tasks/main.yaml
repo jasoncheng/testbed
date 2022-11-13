@@ -1,0 +1,109 @@
+- name: Ubuntu - Update APT
+  apt:
+    update_cache: yes
+    cache_valid_time: 86400
+
+- name: Ubuntu - Install packages
+  package:
+    name: "{{ packages }}"
+    state: present
+  vars:
+    packages:
+      - openjdk-11-jdk
+      - python3-pip
+      - net-tools
+      - nmap
+      - tree
+      - apt-transport-https
+      - curl
+      - docker.io
+
+- name: pip3 packages
+  ansible.builtin.pip:
+    name:
+    - lxml
+    - ssh_config
+    - stormssh
+
+- name: Hostname
+  tags: ["base", "always"]
+  include_role:
+    name: base
+    tasks_from: hosts.yml
+
+- name: Touch env file
+  file:
+    mode: 0755
+    path: "{{ ENV_FILE_SOURCE }}"
+    state: touch
+
+- name: Set {{ ENV_FILE_SOURCE }} for all user
+  blockinfile:
+    insertafter: EOF
+    dest: "{{ ENV_FILE_SOURCE }}"
+    block: |
+      export {{ item.name }}="{{ item.line }}"
+    marker: "\n# {mark} Ansible manage block {{ item.name }}"
+    backup: true
+  with_items:
+    - { name: "JAVA_HOME", line: "{{ JAVA_HOME }}" }
+    - { name: "HADOOP_HOME", line: "{{ HADOOP_HOME }}" }
+    - { name: "HBASE_HOME", line: "{{ HBASE_HOME }}" }
+    - { name: "ZK_HOME", line: "{{ ZK_HOME }}" }
+    - { name: "KAFKA_HOME", line: "{{ KAFKA_HOME }}" }
+    - { name: "HDFS_NAMENODE_USER", line: "root" }
+    - { name: "HDFS_DATANODE_USER", line: "root" }
+    - { name: "HDFS_SECONDARYNAMENODE_USER", line: "root" }
+    - { name: "YARN_RESOURCEMANAGER_USER", line: "root" }
+    - { name: "YARN_NODEMANAGER_USER", line: "root" }
+    - { name: "HBASE_MANAGES_ZK", line: "{{ HBASE_MANAGES_ZK }}" }
+    - { name: "HADOOP_CLASSPATH", line: "${JAVA_HOME}/lib/tools.jar" }
+    - {
+        name: "PATH",
+        line: "$PATH:$JAVA_HOME/bin:$HADOOP_HOME/sbin:$HADOOP_HOME/bin:{{ HBASE_HOME }}/bin:$ZK_HOME/bin:$KAFKA_HOME/bin",
+      }
+
+- name: Config Remote SSH
+  tags: ["base", "always"]
+  include_role:
+    name: base
+    tasks_from: ssh-servers.yml
+
+- name: Config Local SSH
+  when: inventory_hostname == groups['nodes'][0]
+  tags: ["base", "always"]
+  include_role:
+    name: base
+    tasks_from: ssh-local.yml
+
+- name: Add docker group
+  group:
+    name: "docker"
+    state: present
+
+- name: "add ubuntu to docker group"
+  user:
+    name: "ubuntu"
+    groups: ["docker"]
+    append: yes
+  ignore_errors: true
+
+- name: add  {{ K8S_USER }}  to docker group
+  user:
+    name: "{{ K8S_USER }}"
+    groups: ["docker"]
+    append: yes
+  ignore_errors: true
+  when: K8S_USER != OS_USER
+
+- name: AWS - uninstall amazon-ssm-agent
+  shell: "snap remove amazon-ssm-agent"
+
+- name: Reboot
+  include_role:
+    name: base
+    tasks_from: reboot.yml
+
+- name: Set timezone
+  timezone:
+    name: "Asia/Taipei"

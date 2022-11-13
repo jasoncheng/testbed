@@ -1,0 +1,104 @@
+---
+- set_fact: registry="{{ DOCKER_REGISTRY }}"
+
+- name: System - create producer and consumer directory
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+  - "~/producer"
+  - "~/consumer"
+
+- name: System - prepare producer build images files
+  copy: 
+    src: "{{ item }}"
+    dest: "~/producer"
+  with_fileglob:
+  - "files/requirements.txt"
+  - "files/main.py"
+  - "files/producer/Dockerfile"
+
+- name: System - prepare consumer build images files
+  copy: 
+    src: "{{ item }}"
+    dest: "~/consumer"
+  with_fileglob:
+  - "files/requirements.txt"
+  - "files/main.py"
+  - "files/consumer/Dockerfile"
+
+- name: System - install python module
+  pip: name="{{ item }}"
+  with_items:
+    - "docker"
+    - "k8s"
+    - "kubernetes"
+    - "docker-compose"
+
+- name: Docker - Login
+  docker_login: username="{{ DOCKER_USER }}" password="{{ DOCKER_PASS }}"
+
+- name: Docker - build image
+  community.docker.docker_image:
+    name: "kafka-{{ item }}"
+    repository: "{{ registry }}/kafka-{{ item }}"
+    build:
+      path:  "~/{{ item }}"
+    source: build
+    push: yes
+    force_absent: true
+    force_tag: true
+    force_source: true
+  register: buildinfo
+  with_items:
+  - "producer"
+  - "consumer"
+
+- name: K8S - create namespace
+  kubernetes.core.k8s:
+    name: "{{ K8S_DEFAULE_NAMESPACE }}"
+    state: present
+    kind: Namespace
+    api_version: v1
+
+- name: K8S - delete Pods
+  shell: "kubectl --namespace {{ K8S_DEFAULE_NAMESPACE }} delete pods -l purpose=test || true"
+  ignore_errors: true
+
+- set_fact: random_pod_name="{{ lookup('password', '/dev/null chars=ascii_lowercase,digits length=8') }}"
+
+- name: "k8s - generate pod files"
+  template:
+    src: "pod-kafka-{{ item }}.yml.j2"
+    dest: "~/pod-kafka-{{ item }}.yml"
+  with_items:
+  - "producer"
+  - "consumer"
+
+- name: "k8s - create pod"
+  shell: "kubectl --namespace {{ K8S_DEFAULE_NAMESPACE }} apply -f ~/pod-kafka-{{ item }}.yml"
+  with_items:
+  - "producer"
+  - "consumer"
+
+- name: Wait for 2min
+  ansible.builtin.wait_for: timeout=120
+
+- name: Kafka - if consumer log contains successful string (count_num)
+  kubernetes.core.k8s_log:
+    name: "kafka-consumer-{{ random_pod_name }}"
+    namespace: "{{ K8S_DEFAULE_NAMESPACE }}"
+  register: result
+  failed_when: "'count_num' not in result.log"
+  ignore_errors: true
+
+- name: K8S - delete test pods
+  kubernetes.core.k8s:
+    state: absent
+    api_version: v1
+    kind: Pod
+    namespace: "{{ K8S_DEFAULE_NAMESPACE }}"
+    name: "{{ item }}"
+  with_items:
+  - "kafka-consumer-{{ random_pod_name }}"
+  - "kafka-producer-{{ random_pod_name }}"

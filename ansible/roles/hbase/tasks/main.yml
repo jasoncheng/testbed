@@ -1,0 +1,52 @@
+- name: HBase Install
+  include_role:
+    name: hbase
+    tasks_from: install.yml
+
+- name: HBase Config
+  include_role:
+    name: hbase
+    tasks_from: config.yml
+
+- shell: "kill -9 `ps -ef |grep HQuorumPeer |grep -v grep |awk '{print $2}'`"
+  name: "kill HQuorumPeer"
+  tags: ['stop-hbase', 'stop', 'start-hbase']
+  ignore_errors: true
+
+- shell: "kill -9 `ps -ef |grep HRegionServer |grep -v grep |awk '{print $2}'`"
+  name: "kill HRegionServer"
+  tags: ['stop-hbase', 'stop']
+  ignore_errors: true
+
+- shell: "kill -9 `ps -ef |grep HMaster |grep -v grep |awk '{print $2}'`"
+  name: "kill HMaster"
+  tags: ['stop-hbase', 'stop']
+  ignore_errors: true
+
+- name: HBase stop daemon
+  tags: ['stop-hbase', 'stop']
+  ignore_errors: true
+  shell: '. {{ ENV_FILE_SOURCE }} && stop-hbase.sh && hbase-daemon.sh stop thrift'
+  register: hbase_stop_log
+
+- debug: var=hbase_stop_log
+  tags: ['stop-hbase', 'stop']
+  when: "'stop' in ansible_run_tags or 'stop-hbase' in ansible_run_tags"
+
+- name: HBase start daemon
+  tags: ['start-hbase', 'start', 'hbase']
+  ignore_errors: true
+  shell: '. {{ ENV_FILE_SOURCE }} && nohup start-hbase.sh && nohup hbase-daemon.sh start thrift'
+  register: hbase_start_log
+
+- debug: msg="{{ hbase_start_log.stdout_lines | join('\n') }}"
+  tags: ['start-hbase', 'start', 'hbase']
+  when: "'start' in ansible_run_tags or 'start-hbase' in ansible_run_tags or 'hbase' in ansible_run_tags"
+
+- shell: ". {{ ENV_FILE_SOURCE }} && jps"
+  name: list service
+  tags: ['start-hbase', 'stop-hbase', 'start', 'stop']
+  register: jpsinfo
+
+- debug: var=jpsinfo.stdout
+  tags: ['start-hbase', 'stop-hbase', 'start', 'stop']

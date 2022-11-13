@@ -1,0 +1,79 @@
+---
+# Setup local machine can control k8s cluster through kubectl
+- name: Setup local kubectl w/ remote ~/.kube/config
+  hosts: k8sM[0]
+  gather_facts: false
+  become_user: "{{ K8S_USER }}"
+  vars:
+    kubeFolder: "~/.kube"
+    k8sConfigFile: '{{ kubeFolder }}/config'
+  tasks:
+    - name: Create .kube directory
+      file:
+        path: "{{ kubeFolder }}"
+        state: directory
+
+    - name: Download .kube/config
+      fetch: src="{{ k8sConfigFile  }}" dest="{{ k8sConfigFile }}" flat="yes" backup="true"
+    
+    - set_fact: localUser="{{ lookup('env', 'USER') }}"
+
+    - name: Comment out certificate-authority-data
+      become_user: "{{ localUser }}"
+      replace:
+        path: "{{ k8sConfigFile }}"
+        regexp: 'certificate-authority-data' 
+        replace: '#certificate-authority-data'
+        backup: true
+      delegate_to: localhost
+
+    - name: Replace server IP
+      become_user: "{{ localUser }}"
+      replace:
+        path: "{{ k8sConfigFile }}"
+        regexp: 'https:\/\/.*:([0-9]+)'
+        replace: 'https://{{ ansible_host }}:\1'
+        backup: true
+      delegate_to: localhost
+
+    - name: Add insecure-skip-tls-verify true
+      become_user: "{{ localUser }}"
+      lineinfile:
+        path: "{{ k8sConfigFile }}"
+        insertafter: "server"
+        regexp: "insecure-skip-tls-verify"
+        line: "    insecure-skip-tls-verify: true"
+        backup: true
+      delegate_to: localhost
+
+    - name: Add default namespace
+      become_user: "{{ localUser }}"
+      lineinfile:
+        path: "{{ k8sConfigFile }}"
+        insertafter: "server"
+        regexp: "namespace"
+        line: "    namespace: {{ K8S_DEFAULE_NAMESPACE }}"
+        backup: true
+      delegate_to: localhost
+
+    - name: Test get nodes from remote k8sM
+      become_user: "{{ localUser }}"
+      shell: "kubectl get nodes"
+      register: result
+      delegate_to: localhost
+
+    - debug: var=result.stdout_lines
+
+    - name: commnad k8s-pods
+      become_user: "{{ localUser }}"
+      lineinfile:
+        path: "~/.bashrc"
+        insertafter: EOF
+        regexp: "k8s-pods"
+        # line: "alias k8s-pods='kubectl get pod -o=custom-columns=NODE:.spec.nodeName,NAME:.metadata.name,IP:.metadata.ip --all-namespaces'"
+        line: "alias k8s-pods='kubectl get pod -o wide -A'"
+      delegate_to: localhost
+    
+    - shell: "source ~/.bashrc"
+      become_user: "{{ localUser }}"
+      delegate_to: localhost

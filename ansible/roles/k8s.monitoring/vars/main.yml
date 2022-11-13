@@ -1,0 +1,9 @@
+tmpDir: "/tmp/http-request"
+tmpImageDir: "/tmp/goHttpRequestTotal"
+imageRepo: "go-http-request-counts"
+chart_prometheus: "https://prometheus-community.github.io/helm-charts"
+chart_keda: "https://kedacore.github.io/charts"
+prometheus_namespace: 'prometheus-stack'
+# 40.3.1 or 41.7.3, depends on k8s.monitoring.files/*.yaml
+prometheus_stack_version: '40.3.1'
+grafana_password: 'admin'

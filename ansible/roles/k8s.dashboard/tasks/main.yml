@@ -1,0 +1,61 @@
+---
+- set_fact: ns="kubernetes-dashboard" dir="~/k8s-dashboard" adminUsername="admin" urlPath="/dashboard"
+
+- name: Install dashboard
+  shell: "kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.6.1/aio/deploy/recommended.yaml"
+  when: "'stop' not in ansible_run_tags"
+
+- name: Create directory
+  file:
+    path: "{{ dir }}"
+    state: directory
+  when: "'stop' not in ansible_run_tags"
+
+- name: Upload files
+  template:
+    src: "{{ item }}"
+    dest: "{{ dir }}/{{ item | replace('.j2', '') }}"
+  with_items:
+  - "secret.yml.j2"
+  - "admin-user.yml.j2"
+  - "cluster-admin-role.yml.j2"
+  - "ingress.yml.j2"
+  when: "'stop' not in ansible_run_tags"
+
+- name: Apply
+  shell: "kubectl apply -f {{ dir }}/{{ item }}"
+  with_items:
+  - "admin-user.yml"
+  - "cluster-admin-role.yml"
+  - "secret.yml"
+  - "ingress.yml"
+  when: "'stop' not in ansible_run_tags"
+
+- name: Ingress-nginx NodePort
+  shell: "kubectl get svc --no-headers -n ingress-nginx ingress-nginx-controller -o custom-columns=PORT:spec.ports[1].nodePort"
+  register: nodeport
+  when: "'stop' not in ansible_run_tags"
+
+- name: Start dashboard
+  shell: "kubectl scale deploy kubernetes-dashboard -n {{ ns }} --replicas=1"
+  when: "'stop' not in ansible_run_tags"
+
+- name: Stop dashboard
+  shell: "kubectl scale deploy kubernetes-dashboard -n {{ ns }} --replicas=0"
+  when: "'stop' in ansible_run_tags"
+  ignore_errors: true
+
+- name: Get {{ adminUsername }} token
+  shell: "kubectl get secret/{{ adminUsername }} -n kubernetes-dashboard  -o jsonpath=\"{.data.token}\" | base64 --decode"
+  register: token
+  when: "'stop' not in ansible_run_tags"
+
+- name: Print dashboard url and token info
+  debug:
+    msg: "{{ item }}"
+  with_items:
+  - "Login Url: https://{{ hostvars[inventory_hostname]['ansible_host'] }}:{{ nodeport.stdout }}{{ urlPath }}"
+  - "Admin Token:"
+  - "{{ token.stdout }}"
+  when: "'stop' not in ansible_run_tags"
+

@@ -1,0 +1,15 @@
+- name: test my new module
+  hosts: localhost
+  tasks:
+  - name: run new module
+    my_test:
+      name: 'hello123'
+      new: true
+    register: result
+
+  - debug:
+      msg: "{{ result }}"
+
+  # - hello:
+  # - hello:
+  #   name: 'jason'

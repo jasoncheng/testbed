@@ -1,0 +1,5 @@
+- name: Provision
+  include_role:
+    name: test.k8s.csi.ceph
+    tasks_from: provision.yml
+  when: "'test-k8s-csi-ceph' in ansible_run_tags or 'all' in ansible_run_tags"

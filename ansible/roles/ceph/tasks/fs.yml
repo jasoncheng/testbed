@@ -1,0 +1,35 @@
+- name: create pool
+  shell: |
+    ceph osd pool create {{ CEPHFS_DATA }} 16
+    ceph osd pool create {{ CEPHFS_METADATA }} 16
+
+- name: create file system
+  shell: |
+    ceph fs new {{ CEPHFS }} {{ CEPHFS_METADATA }} {{ CEPHFS_DATA }}
+  ignore_errors: true
+
+- name: config max_mds
+  shell: ceph fs set {{ CEPHFS }} max_mds {{ groups['ceph'] | length }} --var=standby_count_wanted --val={{ MDS_STANDBY_COUNT }}
+
+- name: upload mds template
+  template:
+    src: "templates/mds.yml.j2"
+    dest: "~/mds.yml"
+    mode: 0644
+
+- name: apply mds service
+  shell: ceph orch apply -i ~/mds.yml
+
+- name: set {{ CEPHFS }} as default fs name
+  shell: ceph fs set-default {{ CEPHFS }}
+
+- name: create client
+  shell: |
+    ceph auth get-or-create client.{{ CEPHFS_CLIENT_FS }} mon 'allow r' mds 'allow *' osd 'allow rw pool={{ CEPHFS_METADATA }},allow rwx pool={{ CEPHFS_DATA }}'
+    ceph auth get-or-create client.{{ CEPHFS_CLIENT }} mon 'profile rbd' osd 'profile rbd pool={{ CEPH_RBD }}' mgr 'profile rbd pool={{ CEPH_RBD }}'
+
+- name: create block device
+  shell: |
+    ceph osd pool create {{ CEPH_RBD }}
+    rbd pool init {{ CEPH_RBD }}
+    rbd create --size {{ 8 * 1024 * 1024 }} --pool {{ CEPH_RBD }} vol01

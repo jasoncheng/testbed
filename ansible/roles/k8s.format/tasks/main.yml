@@ -1,0 +1,2 @@
+- name: kubeadm reset --force
+  shell: ". {{ ENV_FILE_SOURCE }} && kubeadm reset --force"

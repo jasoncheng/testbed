@@ -1,0 +1,6 @@
+- name: Docker - prevent login failure
+  become: true
+  
+  shell: "chmod 666 /var/run/docker.sock"
+- name: Docker - Login
+  docker_login: username="{{ DOCKER_USER }}" password="{{ DOCKER_PASS }}"

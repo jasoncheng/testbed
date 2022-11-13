@@ -1,0 +1,8 @@
+{% for host in groups['nodes'] %}
+Host {{ host }}
+    User {{ OS_USER }}
+    IdentityFile ~/.ssh/{{ RESOURCE_PREFIX }}.pem
+    HostName {{ hostvars[host]['ansible_host'] }}
+    StrictHostKeyChecking no
+    UserKnownHostsFile=/dev/null
+{% endfor %}

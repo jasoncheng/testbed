@@ -1,0 +1,9 @@
+ansible/*.pem
+ansible/*.pub
+ansible/inventory/*.inv
+ansible/buffer/
+ansible/ansible.cfg
+__pycache__
+
+# terraform
+terraform/vars/*.tf

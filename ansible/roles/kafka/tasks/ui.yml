@@ -1,0 +1,51 @@
+
+- set_fact:
+   uisvc: "kafka-ui-service"
+   uideploy: "kafka-ui-deployment"
+
+- name: Install pip modules
+  pip:
+    name: "{{ item }}"
+  with_items:
+    - "kubernetes"
+
+- name: Remove service
+  become_user: "{{ K8S_USER }}"
+  kubernetes.core.k8s:
+    state: absent
+    api_version: v1
+    kind: Service
+    namespace: "{{ K8S_DEFAULE_NAMESPACE }}"
+    name: "{{ uisvc }}"
+
+- name: Remove deployment
+  become_user: "{{ K8S_USER }}"
+  kubernetes.core.k8s:
+    state: absent
+    api_version: v1
+    kind: Deployment
+    namespace: "{{ K8S_DEFAULE_NAMESPACE }}"
+    name: "{{ uideploy }}"
+
+- name: Wait for 1min
+  wait_for:
+    timeout: 60
+    
+- name: Create deployment
+  become_user: "{{ K8S_USER }}"
+  kubernetes.core.k8s:
+    state: present
+    wait: true
+    wait_sleep: 10
+    template:
+      - path: 'ui-deployment.j2'
+      - path: 'ui-service.j2'
+
+- name: Wait for port listen
+  wait_for:
+    port: "{{ KAFKA_UI_PORT }}"
+    delay: 10
+
+- debug:
+    msg: |
+      Kafka WebUI http://{{ hostvars[groups['kafkaBroker'][0]].ansible_host }}:{{ KAFKA_UI_PORT }}

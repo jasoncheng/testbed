@@ -1,0 +1,75 @@
+
+- set_fact: tmpDir="~/k8s-csi-ceph"
+
+- name: gater fact
+  setup:
+  delegate_facts: true
+  delegate_to: "{{ item }}"
+  with_items: "{{ groups['ceph'] }}"
+
+- name: create template folder
+  file:
+    state: directory
+    path: "{{ tmpDir }}"
+
+- shell: cephadm shell ceph fsid | tail -n1
+  become: true
+  become_user: root
+  register: result
+
+- debug: msg="{{ result }}"
+
+- set_fact: fsid="{{ result.stdout }}"
+
+- shell: ceph mon stat|awk '{print $(NF)}'
+  become: true
+  become_user: root
+  register: result
+
+- debug: msg="{{ result }}"
+
+- set_fact: mon="{{ result.stdout.split(",") }}"
+
+- shell: ceph auth get-key client.{{ CEPHFS_CLIENT }}
+  become: true
+  become_user: root
+  register: result
+
+- set_fact: key="{{ result.stdout }}"
+
+- shell: ceph auth get-key client.admin
+  become: true
+  become_user: root
+  register: result
+
+- set_fact: keyAdmin="{{ result.stdout }}"
+
+- get_url:
+    url: "{{ item }}"
+    dest: "{{ tmpDir }}/"
+  loop:
+  - https://raw.githubusercontent.com/ceph/ceph-csi/master/deploy/rbd/kubernetes/csi-nodeplugin-rbac.yaml
+  - https://raw.githubusercontent.com/ceph/ceph-csi/master/deploy/rbd/kubernetes/csi-provisioner-rbac.yaml
+
+- template:
+    src: "templates/{{ item }}"
+    dest: "{{ tmpDir }}/.{{ item | replace('.j2', '') }}"
+  with_items:
+  - "csi-config-map.yaml.j2"
+  - "csi-rbd-secret.yaml.j2"
+  - "csi-rbd-sc.yaml.j2"
+  - "raw-block-pvc.yaml.j2"
+  - "csi-kms-config-map.yaml.j2"
+  - "csi-rbdplugin-provisioner.yaml.j2"
+  - "csi-rbdplugin.yaml.j2"
+  - "raw-block-pod.yaml.j2"
+  register: targets
+
+- name: Apply resource
+  shell: kubectl apply -f {{ tmpDir }}
+
+#helm install --namespace "ceph-csi-rbd" "ceph-csi-rbd" ceph-csi/ceph-csi-rbd --set configMapName=ceph-csi-config --set secret.userID=client.admin --set secret.userKey=AQBYkm9jOT+jOBAABrWcTT/KwIbH+j8dtCzFPA== --set storageClass.pool=k8s --set storageClass.dataPool=rdb
+#helm uninstall "ceph-csi-rbd" --namespace "ceph-csi-rbd"
+
+#ansible -m shell -a "sudo ifconfig cni0 down" all
+#ansible -m shell -a "sudo ip link delete cni0" all

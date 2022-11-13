@@ -1,0 +1,18 @@
+---
+- name: Ceph - Install
+  gather_facts: no
+  become_user: root
+  become: true
+  hosts: all
+  tasks:
+  - include_role:
+      name: ceph
+      tasks_from: install.yml
+
+- name: Ceph - Config
+  gather_facts: no
+  become_user: root
+  become: true
+  hosts: ceph_adm
+  roles:
+  - { role: ceph }

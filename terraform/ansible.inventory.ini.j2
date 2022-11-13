@@ -1,0 +1,55 @@
+[${prefix}:children]
+namenode
+datanode
+external
+ceph
+ceph_adm
+ceph_osd
+ceph_mon
+
+[nodes]
+%{ for index in range(length(all)) ~}
+${prefix}${index+1} ansible_host=${all[index]} hostname='${prefix}${index+1}'
+%{ endfor ~}
+
+[external]%{for ip, str in other_servers}
+${split("|", str)[0]} ansible_host=${ip} ansible_ssh_user=ubuntu ansible_ssh_private_key_file=${split("|",str)[1]}%{ endfor }
+
+[namenode]
+${prefix}1
+
+[datanode]%{ for index in range(length(all)) }
+${prefix}${index+1}%{ endfor }
+
+[regionservers]
+${prefix}[1:${length(all)}]
+
+[k8sM]
+${prefix}[1:1]
+
+[k8sS]
+%{ if length(all) > 1}
+${prefix}[2:${length(all)}]
+%{ endif }%{for ip, str in other_servers}${split("|", str)[0]}
+%{endfor}
+
+[kafkaBroker]
+${prefix}[1:${length(all)}]
+
+[zk]
+${prefix}[1:${length(all)}]
+
+[builder]
+${prefix}${length(all)}
+
+[ceph]
+${prefix}[1:${length(all)}]
+
+[ceph_adm]
+${prefix}1
+
+[ceph_mon]
+${prefix}[1:${length(all)}]
+
+[ceph_osd]
+${prefix}[1:${length(all)}]

@@ -1,0 +1,7 @@
+- name: If ScaledObject Active == True
+  shell: |
+    kubectl get scaledobject http-request-total-scaledobject --no-headers -o custom-columns=Active:status.conditions[0].status
+  register: result
+  retries: 12
+  delay: 10
+  until: result.stdout == "True"

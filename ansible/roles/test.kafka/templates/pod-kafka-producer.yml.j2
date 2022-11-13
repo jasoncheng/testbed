@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: {{ K8S_DEFAULE_NAMESPACE }}
+  name: "kafka-producer-{{ random_pod_name }}"
+  labels:
+    app: kafka-producer
+    purpose: test
+spec:
+  hostNetwork: true
+  hostAliases:
+  {% for host in groups['kafkaBroker'] %}
+- ip: "{{ hostvars[host].ansible_host }}" 
+    hostnames:
+    - "{{ host }}"
+  {% endfor %}
+
+  containers:
+  - name: kafka-producer
+    image: {{ registry }}/kafka-producer
+  restartPolicy: Never 

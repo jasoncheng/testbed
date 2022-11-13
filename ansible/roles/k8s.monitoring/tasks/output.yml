@@ -1,0 +1,7 @@
+- debug:
+    msg:
+    - "Grafana URL http://{{ RESOURCE_PREFIX }}1:{{ nodeport }}/, user/password admin/{{ grafana_password }}"
+    - "Prometheus URL http://{{ RESOURCE_PREFIX }}2:{{ nodeport }}/"
+    - "Go Web Server http://{{ RESOURCE_PREFIX }}3:{{ nodeport }}/"
+    - "Go Web Server Metrics http://{{ RESOURCE_PREFIX }}3:{{ nodeport }}/metrics"
+    - "$hey -n 10000 -m GET http://{{ RESOURCE_PREFIX }}3:{{ nodeport }}/hello, and watch pods scaleOut/scaleIn"

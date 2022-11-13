@@ -1,0 +1,64 @@
+# - debug: var=isMaster
+
+# - debug: var=hostvars[inventory_hostname]['ansible_default_ipv4']['address']
+
+- set_fact: cidrblock="10.244.0.0/16" k8sConfigFile='~/.kube/config'
+
+- name: Reset Kubernetes component
+  become: true
+  become_user: root
+  shell: "kubeadm reset --force"
+  register: reset_cluster
+  ignore_errors: true
+
+- name: Delete .kube folder
+  become: true
+  file:
+    state: absent
+    path: "{{ item.path }}"
+  with_items:
+  - { "owner": "root", "path": "/root/.kube/config" }
+  - { "owner": "{{ K8S_USER }}", "path": "$HOME/.kube/config" }
+
+- name: Initialize cluster
+  become: true
+  become_user: root
+  shell: "kubeadm init --pod-network-cidr={{ cidrblock }} --ignore-preflight-errors=cri"
+  ignore_errors: true
+  args:
+    chdir: $HOME
+    creates: cluster_initialized.txt
+
+- name: Copy admin.conf to user's kube config
+  become_user: root
+  become: true
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /home/{{ K8S_USER }}/.kube/config
+    remote_src: true
+    owner: "{{ K8S_USER }}"
+    mode: 0600
+
+- name: fetch .kube/confg to local
+  fetch: src="{{ k8sConfigFile }}" dest="{{ k8sConfigFile }}" flat="yes" backup="true"
+
+- name: Install Pod network
+  become_user: "{{ K8S_USER }}"
+  shell: |
+    kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
+  args:
+    chdir: $HOME
+  when: "inventory_hostname in groups['k8sM']"
+  ignore_errors: true
+
+- name: Get join token
+  become_user: "{{ K8S_USER }}"
+  shell: kubeadm token create --print-join-command
+  register: k8s_join_command
+
+- debug: var=k8s_join_command.stdout
+  
+- set_fact: localUser="{{ lookup('env', 'USER') }}"
+
+- name: Save command to file in your pc
+  local_action: copy content="{{ k8s_join_command.stdout_lines[0] }}" dest="{{ K8S_JOIN_COMMAND_FILE }}" mode=0777

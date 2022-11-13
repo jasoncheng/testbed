@@ -1,0 +1,47 @@
+- name: delete masters
+  file:
+    path: "{{ HADOOP_HOME }}/etc/hadoop/masters"
+    state: absent
+
+- name: delete slavers
+  file:
+    path: "{{ HADOOP_HOME }}/etc/hadoop/slavers"
+    state: absent
+
+- name: touch masters
+  file:
+    path: "{{ HADOOP_HOME }}/etc/hadoop/masters"
+    state: touch
+
+- name: touch slavers
+  file:
+    path: "{{ HADOOP_HOME }}/etc/hadoop/slavers"
+    state: touch
+
+- name: masters
+  lineinfile:
+    path: "{{ HADOOP_HOME }}/etc/hadoop/masters"
+    line: "{{ item }}"
+    regexp: "{{ item }}"
+  with_items: "{{ groups['namenode'] }}"
+  when:
+    - "item in groups['namenode']"
+
+- name: slavers
+  lineinfile:
+    path: "{{ HADOOP_HOME }}/etc/hadoop/slavers"
+    line: "{{ item }}"
+    regexp: "{{ item }}"
+  with_items: "{{ groups['nodes'] }}"
+  when: "item not in groups['namenode']"
+  # when: "inventory_hostname in groups['namenode']"
+
+# - name: Node-Slaver hadoops/slavers
+#   lineinfile:
+#     path: "{{ HADOOP_HOME }}/etc/hadoop/slavers"
+#     line: "{{ item }}"
+#     regexp: "{{ item }}"
+#   with_items: "{{ groups['datanode'] }}"
+#   when:
+#     - "'slaver' in inventory_hostname"
+#     - "'master' not in item"

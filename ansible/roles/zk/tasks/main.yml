@@ -1,0 +1,37 @@
+- name: ZooKeeper Install
+  include_role:
+    name: zk
+    tasks_from: install.yml
+
+- name: ZooKeeper Config
+  include_role:
+    name: zk
+    tasks_from: config.yml
+
+- name: stop
+  tags: ['stop-zk', 'stop']
+  ignore_errors: true
+  shell: '. {{ ENV_FILE_SOURCE }} && zkServer.sh stop'
+  register: zk_stop_log
+
+- debug: var=zk_stop_log
+  when: "'stop' in ansible_run_tags"
+
+- name: start
+  tags: ['start-zk', 'start']
+  ignore_errors: true
+  shell: '. {{ ENV_FILE_SOURCE }} && zkServer.sh start'
+  register: zk_start_log
+
+- debug: var=zk_start_log
+  when: "'start' in ansible_run_tags"
+
+- name: Validating if zookeeper running
+  tags: ['start-zk', 'start']
+  wait_for:
+    host: localhost
+    port: 2181
+    delay: 10
+    timeout: 30
+    state: started
+    msg: "Zookeeper started."

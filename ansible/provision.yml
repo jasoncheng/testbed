@@ -1,0 +1,51 @@
+- name: Prepare
+  hosts: nodes
+  tags: ["base", "local-ssh"]
+  gather_facts: true
+  roles:
+    - { role: base, become: true }
+  handlers:
+  - name: restart sshd
+    become: true
+    service: name=sshd state=restarted
+
+# - name: Prepare External
+#   hosts: all
+#   tags: ["base", "local-ssh"]
+#   gather_facts: true
+#   roles:
+#     - { role: base.external, become: true }
+
+- name: ZooKeeper
+  hosts: all
+  tags: ["zk"]
+  gather_facts: false
+  roles:
+    - { role: zk, become: true }
+
+- name: Hadoop
+  hosts: all
+  tags: ["hadoop"]
+  gather_facts: false
+  roles:
+    - { role: hadoop, become: true }
+
+- name: HBase
+  hosts: all
+  tags: ["hbase"]
+  gather_facts: false
+  roles:
+    - { role: hbase, become: true }
+
+- name: Kafka
+  hosts: all
+  tags: ["kafka"]
+  gather_facts: false
+  roles:
+    - { role: kafka, become: true }
+
+- import_playbook: k8s.yml
+  tags: ["k8s"]
+
+- import_playbook: ceph.yml
+  tags: ['ceph']

@@ -1,0 +1,28 @@
+
+- shell: ". {{ ENV_FILE_SOURCE }} && rm -fr {{ DIR_DATA }}/current"
+  name: remove data node current folder
+  register: debug1
+
+- shell: ". {{ ENV_FILE_SOURCE }} && rm -fr {{ DIR_NAME }}/current"
+  name: remove name node current folder
+  register: debug2
+
+- shell: ". {{ ENV_FILE_SOURCE }} && hdfs namenode -format -force"
+  register: debug3
+  ignore_errors: true
+
+- name: delete /tmp/hadoop*
+  file:
+    state: absent
+    path: "{{ item }}"
+  with_items:
+    - "/tmp/hadoop-root/"
+    - "/tmp/hadoop-yarn-root/"
+
+# - debug: var=debug3
+
+- name: format namenode
+  shell: ". {{ ENV_FILE_SOURCE }} && hadoop namenode -format -force"
+  register: result
+
+# - debug: var=result

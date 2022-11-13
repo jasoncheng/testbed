@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-ui-deployment
+  namespace: "{{ K8S_DEFAULE_NAMESPACE }}"
+  labels:
+    app: kafka-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-ui
+  template:
+    metadata:
+      labels:
+        app: kafka-ui
+    spec:
+      hostNetwork: true
+      containers:
+      - name: kafka-ui
+        image: provectuslabs/kafka-ui:latest
+        env:
+        - name: KAFKA_CLUSTERS_0_NAME
+          value: "{{ groups['k8sM'][0] }}"
+        - name: KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS
+          value: "{{ groups['k8sM'][0] }}:9092"
+        - name: SERVER_PORT
+          value: "{{ KAFKA_UI_INTERNAL_PORT }}"
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: {{ KAFKA_UI_INTERNAL_PORT }}
