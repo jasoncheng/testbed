@@ -2,7 +2,7 @@
 private_key_file = ../terraform/${key_name}
 inventory = inventory/${inventory}
 host_key_checking = False
-remote_User = ubuntu
+remote_User = {{ os }}
 pipelining = true
 
 [privilege_escalation]

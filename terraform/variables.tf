@@ -8,13 +8,19 @@ variable "aws_region" {
   default = "ap-northeast-1"
 }
 
+variable "os" {
+  type = string
+  default = "ubuntu"
+  description = "support centos or ubuntu"
+}
+
 variable "instance_type_first" {
   type    = string
-  default = "t3.small"
+  default = "t4g.small"
 }
 variable "instance_type" {
   type    = string
-  default = "t3.small"
+  default = "t4g.small"
 }
 
 variable "instance_count" {

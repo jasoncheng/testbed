@@ -16,3 +16,11 @@ data "aws_ami_ids" "ami" {
     values = ["*ubuntu-focal-20.04-amd64-server-20211021*"]
   }
 }
+
+data "aws_ami_ids" "ami_centos" {
+  owners      = ["self", "amazon", "125523088429"]
+  filter {
+    name   = "name"
+    values = ["*CentOS*"]
+  }
+}

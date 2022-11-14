@@ -5,10 +5,11 @@ resource "local_file" "ansible_inventory" {
     aws_instance.instances
   ]
   content = templatefile("ansible.inventory.ini.j2", {
-    all = aws_instance.instances.*.public_ip,
-    prefix = local.prefix,
+    all           = aws_instance.instances.*.public_ip,
+    prefix        = local.prefix,
     other_servers = var.other_servers,
-    size=length(aws_instance.instances.*.public_ip)+1
+    size          = length(aws_instance.instances.*.public_ip) + 1,
+    os            = var.os
   })
   filename = "../ansible/inventory/${local.prefix}.inv"
 }
@@ -18,8 +19,9 @@ resource "local_file" "ansible_cfg" {
     aws_instance.instances
   ]
   content = templatefile("ansible.cfg.ini.j2", {
-    key_name = "${local.key_name}",
-    inventory = "${local.prefix}.inv"
+    key_name  = "${local.key_name}",
+    inventory = "${local.prefix}.inv",
+    os        = var.os
   })
   filename = "../ansible/ansible.cfg"
 }
