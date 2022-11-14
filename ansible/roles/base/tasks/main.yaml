@@ -1,22 +1,72 @@
-- name: Ubuntu - Update APT
-  apt:
-    update_cache: yes
-    cache_valid_time: 86400
+# - name: Ubuntu - Update APT
+#   apt:
+#     update_cache: yes
+#     cache_valid_time: 86400
 
-- name: Ubuntu - Install packages
+- set_fact: centOS="{{ ansible_distribution == "CentOS" }}"
+
+- name: System updates
+  include_role:
+    name: base
+    tasks_from: systemUpdate.yml
+
+- name: Before Install
+  shell: |
+    yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+    yum-config-manager --enable docker-ce-edge
+    yum -y install epel-release
+    yum -y update
+    yum groupinstall "development tools" -y
+    yum install openssl-devel libffi-devel bzip2-devel -y
+    yum install python3-devel python3 -y
+  when: centOS
+  ignore_errors: true
+
+- name: Install packages
   package:
     name: "{{ packages }}"
     state: present
   vars:
     packages:
-      - openjdk-11-jdk
-      - python3-pip
+      - "{{ 'java-1.8.0-openjdk' if centOS else 'openjdk-11-jdk' }}"
+      - "{{ (centOS) | ternary('python3-pip', 'python3-pip') }}"
       - net-tools
       - nmap
       - tree
-      - apt-transport-https
+      - wget
+      - openssl
+      - "{{ (centOS) | ternary('tree', 'apt-transport-https') }}"
+      - "{{ (centOS) | ternary('yum-utils', 'tree') }}"
+      - "{{ (centOS) | ternary('device-mapper-persistent-data', 'tree') }}"
+      - "{{ (centOS) | ternary('lvm2', 'tree') }}"
       - curl
-      - docker.io
+      - "{{ 'docker.io' if not centOS else 'docker-ce'}}"
+  ignore_errors: true
+
+- set_fact: centOSPythonVersion="3.10.2"
+
+# - name: download latest Python-{{ centOSPythonVersion }} and install 
+#   shell: |
+    # wget https://www.python.org/ftp/python/{{ centOSPythonVersion }}/Python-{{ centOSPythonVersion }}.tgz
+    # wget https://bootstrap.pypa.io/get-pip.py
+    # tar -xzf Python-{{ centOSPythonVersion }}.tgz
+    # cd Python-{{ centOSPythonVersion }}
+    # ./configure --enable-optimizations || true
+    # make
+    # make altinstall || true
+    # # cp python /usr/bin/python-{{ centOSPythonVersion }}
+    # ln -s /usr/bin/python-{{ centOSPythonVersion }} /usr/bin/python
+    # python get-pip.py
+  # no_log: true
+  # ignore_errors: true
+  # when: centOS
+  
+# - name: Clean
+#   shell: "rm -fr ~/{{ item }}"
+#   with_items:
+#   - "Python*"
+#   - "get-pip*"
+#   when: centOS
 
 - name: pip3 packages
   ansible.builtin.pip:
