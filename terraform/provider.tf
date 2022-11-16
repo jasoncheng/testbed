@@ -18,9 +18,10 @@ data "aws_ami_ids" "ami" {
 }
 
 data "aws_ami_ids" "ami_centos" {
-  owners      = ["self", "amazon", "125523088429"]
+  owners      = ["self", "amazon", "125523088429", "374168611083"]
   filter {
     name   = "name"
-    values = ["*CentOS*"]
+    values = ["ap-northeast-1 image for x86_64 CentOS_7"]
+    # values = ["*centos7-hvm-x86_64-202202282101*"]
   }
 }

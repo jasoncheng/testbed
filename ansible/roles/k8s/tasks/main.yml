@@ -19,3 +19,8 @@
   include_role:
     name: k8s
     tasks_from: install.yml
+
+- name: Reboot
+  include_role:
+    name: base
+    tasks_from: reboot.yml

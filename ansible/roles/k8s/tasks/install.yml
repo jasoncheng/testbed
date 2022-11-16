@@ -24,7 +24,10 @@
     state: "touch"
 
 - name: Install helm
-  shell: "snap install helm --classic"
+  community.general.snap:
+    name: helm
+    classic: true
+  # shell: "snap install helm --classic"
 
 - name: Add conf for containerd
   blockinfile:
@@ -52,6 +55,7 @@
 
 - name: install and configure dependencies
   shell: curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+  when: centOS == false
 
 - set_fact: k8s_sourcelist="/etc/apt/sources.list.d/kubernetes.list"
 
@@ -59,15 +63,45 @@
   file:
     path: "{{ k8s_sourcelist }}"
     state: "touch"
+  when: centOS == false
 
 - name: Add k8s source
   blockinfile:
     path: "{{ k8s_sourcelist }}"
     block: |
       deb https://apt.kubernetes.io/ kubernetes-xenial main
+  when: centOS == false
 
-- name: Install kubernets
-  tags: ['install']
+
+- name: Create k8s repo file for centos
+  copy:
+     dest: "/etc/yum.repos.d/kubernetes.repo"
+     content: |
+       [kubernetes]
+       name=Kubernetes
+       baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+       enabled=1
+       gpgcheck=0
+       repo_gpgcheck=0
+       gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+  when: centOS
+
+# - name: Install kubernets
+#   tags: ['install']
+#   shell: |
+#     apt-get update
+#     apt-get install -y kubelet kubeadm kubectl
+  
+- name: Instal kubernetes
+  package:
+    state: present
+    name: "{{ item }}"
+  with_items:
+  - kubelet
+  - kubeadm
+  - kubectl
+
+- name: Disable SELinux
   shell: |
-    apt-get update
-    apt-get install -y kubelet kubeadm kubectl
+    sudo setenforce 0
+    sudo sed -i --follow-symlinks 's/SELINUX=enforcing/SELINUX=disabled/g' /etc/sysconfig/selinux

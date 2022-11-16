@@ -25,3 +25,13 @@ resource "local_file" "ansible_cfg" {
   })
   filename = "../ansible/ansible.cfg"
 }
+
+resource "local_file" "ansible_groups_vars" {
+  depends_on = [
+    aws_instance.instances
+  ]
+  content = templatefile("ansible.group_vars.yml.j2", {
+    os        = var.os
+  })
+  filename = "../ansible/group_vars/${local.prefix}.yml"
+}

@@ -16,11 +16,11 @@ variable "os" {
 
 variable "instance_type_first" {
   type    = string
-  default = "t4g.small"
+  default = "t3.small"
 }
 variable "instance_type" {
   type    = string
-  default = "t4g.small"
+  default = "t3.small"
 }
 
 variable "instance_count" {
@@ -28,7 +28,7 @@ variable "instance_count" {
 }
 
 variable "instance_ebs_size" {
-  default = 24
+  default = 60
 }
 
 variable "instance_extra_ebs_size" {

@@ -10,18 +10,6 @@
     name: base
     tasks_from: systemUpdate.yml
 
-- name: Before Install
-  shell: |
-    yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-    yum-config-manager --enable docker-ce-edge
-    yum -y install epel-release
-    yum -y update
-    yum groupinstall "development tools" -y
-    yum install openssl-devel libffi-devel bzip2-devel -y
-    yum install python3-devel python3 -y
-  when: centOS
-  ignore_errors: true
-
 - name: Install packages
   package:
     name: "{{ packages }}"
@@ -39,34 +27,15 @@
       - "{{ (centOS) | ternary('yum-utils', 'tree') }}"
       - "{{ (centOS) | ternary('device-mapper-persistent-data', 'tree') }}"
       - "{{ (centOS) | ternary('lvm2', 'tree') }}"
-      - curl
+      - "{{ (centOS) | ternary('snapd', 'tree') }}"
       - "{{ 'docker.io' if not centOS else 'docker-ce'}}"
   ignore_errors: true
 
-- set_fact: centOSPythonVersion="3.10.2"
-
-# - name: download latest Python-{{ centOSPythonVersion }} and install 
-#   shell: |
-    # wget https://www.python.org/ftp/python/{{ centOSPythonVersion }}/Python-{{ centOSPythonVersion }}.tgz
-    # wget https://bootstrap.pypa.io/get-pip.py
-    # tar -xzf Python-{{ centOSPythonVersion }}.tgz
-    # cd Python-{{ centOSPythonVersion }}
-    # ./configure --enable-optimizations || true
-    # make
-    # make altinstall || true
-    # # cp python /usr/bin/python-{{ centOSPythonVersion }}
-    # ln -s /usr/bin/python-{{ centOSPythonVersion }} /usr/bin/python
-    # python get-pip.py
-  # no_log: true
-  # ignore_errors: true
-  # when: centOS
-  
-# - name: Clean
-#   shell: "rm -fr ~/{{ item }}"
-#   with_items:
-#   - "Python*"
-#   - "get-pip*"
-#   when: centOS
+- name: config snap for centOS
+  shell: |
+    systemctl enable --now snapd.socket
+    ln -sf /var/lib/snapd/snap /snap
+  when: centOS
 
 - name: pip3 packages
   ansible.builtin.pip:
@@ -74,6 +43,9 @@
     - lxml
     - ssh_config
     - stormssh
+    - snap
+    extra_args: --upgrade
+    executable: pip3
 
 - name: Hostname
   tags: ["base", "always"]
@@ -148,6 +120,7 @@
 
 - name: AWS - uninstall amazon-ssm-agent
   shell: "snap remove amazon-ssm-agent"
+  when: centOS == false
 
 - name: Reboot
   include_role:
