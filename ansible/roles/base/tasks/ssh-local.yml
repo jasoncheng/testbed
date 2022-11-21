@@ -2,14 +2,19 @@
 - set_fact: sshIncludeDir="~/.ssh/config.d" localUser="{{ lookup('env', 'USER') }}"
   tags: ['local-ssh']
 
+- set_fact: keyPath="../terraform/{{ RESOURCE_PREFIX }}.pem"
+  tags: ['local-ssh']
+
 - name: Local - Copy server private key to ~/.ssh
   tags: ['local-ssh']
   become_user: "{{ localUser }}"
   copy:
-    src: "../terraform/{{ RESOURCE_PREFIX }}.pem"
+    src: "{{ keyPath }}"
     dest: "~/.ssh/"
     mode: 0400
   delegate_to: localhost
+  ignore_errors: true
+  when: keyPath is file
 
 - name: Local - Update ssh ~/.ssh/config.d folder
   tags: ['local-ssh']

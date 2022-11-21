@@ -15,6 +15,13 @@
   notify:
     restart sshd
 
+- name: Config - create .ssh folder
+  become_user: "{{ item }}"
+  file: 
+    path: "~/.ssh"
+    state: directory
+  with_items: "{{ grant_users }}"
+
 - name: Config - create .ssh/config
   become_user: "{{ item }}"
   file: 
@@ -30,6 +37,7 @@
     user_known_hosts_file: /dev/null
     strict_host_key_checking: no
   with_items: "{{ grant_users }}"
+  ignore_errors: true
 
 - name: keygen
   tags: ['base', 'server-ssh']

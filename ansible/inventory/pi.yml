@@ -1,0 +1,12 @@
+[pi:children]
+
+[nodes]
+pi1 ansible_host=10.33.27.140 hostname='pi1'
+
+[pi]
+pi1
+
+[k8sM]
+pi1
+
+[k8sS]

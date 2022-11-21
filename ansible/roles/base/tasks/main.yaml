@@ -1,51 +1,39 @@
-# - name: Ubuntu - Update APT
-#   apt:
-#     update_cache: yes
-#     cache_valid_time: 86400
+- name: Ubuntu - Update APT
+  apt:
+    update_cache: yes
+    cache_valid_time: 86400
 
-- set_fact: centOS="{{ ansible_distribution == "CentOS" }}"
-
-- name: System updates
-  include_role:
-    name: base
-    tasks_from: systemUpdate.yml
-
-- name: Install packages
-  package:
+- name: Ubuntu - Install package
+  apt:
     name: "{{ packages }}"
     state: present
   vars:
     packages:
-      - "{{ 'java-1.8.0-openjdk' if centOS else 'openjdk-11-jdk' }}"
-      - "{{ (centOS) | ternary('python3-pip', 'python3-pip') }}"
+      - openjdk-11-jdk
+      - python3-pip
       - net-tools
       - nmap
       - tree
-      - wget
-      - openssl
-      - "{{ (centOS) | ternary('tree', 'apt-transport-https') }}"
-      - "{{ (centOS) | ternary('yum-utils', 'tree') }}"
-      - "{{ (centOS) | ternary('device-mapper-persistent-data', 'tree') }}"
-      - "{{ (centOS) | ternary('lvm2', 'tree') }}"
-      - "{{ (centOS) | ternary('snapd', 'tree') }}"
-      - "{{ 'docker.io' if not centOS else 'docker-ce'}}"
-  ignore_errors: true
+      - apt-transport-https
+      - curl
+      - docker.io
+      # - containerd.io
+      - snapd
+      - acl
 
-- name: config snap for centOS
-  shell: |
-    systemctl enable --now snapd.socket
-    ln -sf /var/lib/snapd/snap /snap
-  when: centOS
+# - name: PI
+#   shell: |
+#     curl https://sh.rustup.rs -sSf | sh -s -- -y
+#   when: "'pi' in inventory_hostname"
 
 - name: pip3 packages
   ansible.builtin.pip:
+    state: latest
     name:
     - lxml
     - ssh_config
     - stormssh
-    - snap
-    extra_args: --upgrade
-    executable: pip3
+  ignore_errors: true
 
 - name: Hostname
   tags: ["base", "always"]
@@ -82,7 +70,7 @@
     - { name: "HADOOP_CLASSPATH", line: "${JAVA_HOME}/lib/tools.jar" }
     - {
         name: "PATH",
-        line: "$PATH:$JAVA_HOME/bin:$HADOOP_HOME/sbin:$HADOOP_HOME/bin:{{ HBASE_HOME }}/bin:$ZK_HOME/bin:$KAFKA_HOME/bin",
+        line: "$PATH:$JAVA_HOME/bin:$HADOOP_HOME/sbin:$HADOOP_HOME/bin:{{ HBASE_HOME }}/bin:$ZK_HOME/bin:$KAFKA_HOME/bin:/snap/bin",
       }
 
 - name: Config Remote SSH
@@ -120,7 +108,7 @@
 
 - name: AWS - uninstall amazon-ssm-agent
   shell: "snap remove amazon-ssm-agent"
-  when: centOS == false
+  ignore_errors: true
 
 - name: Reboot
   include_role:
