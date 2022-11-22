@@ -1,3 +1,7 @@
+- set_fact:
+    isCentOS: ansible_distribution == 'CentOS'
+    isUbuntu: ansible_distribution == 'Ubuntu'
+
 - name: Create user
   include_role:
     name: k8s

@@ -1,5 +1,17 @@
 # /boot/cmdline.txt
 # cgroup_enable=memory 和 cgroup_memory=1
+- name: enable snapd
+  systemd:
+    name: snapd
+    enabled: true
+    state: started
+
+- name: create snapd symbolic link
+  file:
+    src: /var/lib/snapd/snap
+    dest: /snap
+    state: link
+
 - name: Create containerd config file
   file:
     path: "/etc/modules-load.d/containerd.conf"
@@ -29,8 +41,16 @@
     path: "/etc/sysctl.d/99-kubernetes-cri.conf"
     state: "touch"
 
+# - name: Install helm
+#   shell: "snap install helm --classic"
+
 - name: Install helm
-  shell: "snap install helm --classic"
+  snap:
+    name: helm
+    classic: true
+
+# - name: Init helm
+#   shell: helm init --stable-repo-url=https://charts.helm.sh/stable
 
 - name: Add conf for containerd
   blockinfile:
@@ -66,19 +86,39 @@
 
 - name: install and configure dependencies
   shell: curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+  when: isCentOS == False
+
+- name: RHEL import gpg key
+  shell: |
+    rpm --import https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+  when: isCentOS
 
 - set_fact: k8s_sourcelist="/etc/apt/sources.list.d/kubernetes.list"
+  when: isCentOS == False
 
 - name: Create k8s repo file
   file:
     path: "{{ k8s_sourcelist }}"
     state: "touch"
+  when: isCentOS == False
+
+- name: RHEL add k8s repo
+  yum_repository:
+    name: kubernetes
+    gpgcheck: yes
+    repo_gpgcheck: no
+    description: for kubernetes
+    enabled: yes
+    file: k8s_repo
+    baseurl: "https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64"
+  when: isCentOS
 
 - name: Add k8s source
   blockinfile:
     path: "{{ k8s_sourcelist }}"
     block: |
       deb https://apt.kubernetes.io/ kubernetes-xenial main
+  when: isCentOS == False
 
 # - name: Install kubernets
 #   tags: ['install']
@@ -87,9 +127,9 @@
 #     apt-get install -y kubelet kubeadm kubectl
 
 - name: Install k8s
-  apt:
+  package:
     name: "{{ packages }}"
-    state: present
+    state: latest
   vars:
     packages:
     - kubelet

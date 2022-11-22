@@ -1,5 +1,5 @@
 BASE_DIR: '/usr/local'
-RESOURCE_PREFIX: 'bd'
+RESOURCE_PREFIX: 'pi'
 ENV_FILE_SOURCE: '/etc/profile'
 JAVA_HOME: '/usr/lib/jvm/java-11-openjdk-amd64'
 DOWNLOAD_URL_HBASE: 'https://dlcdn.apache.org/hbase/2.5.0/hbase-2.5.0-bin.tar.gz'
@@ -35,3 +35,5 @@ CEPHFS: 'cephfs'
 CEPHFS_CLIENT: 'k8scsi'
 CEPHFS_DATA: 'cephfs_data'
 CEPHFS_METADATA: 'cephfs_metadata'
+
+ansible_python_interpreter: '/usr/bin/python3'

@@ -1,30 +1,56 @@
-- name: Ubuntu - Update APT
-  apt:
+- name: Install system updates for centos
+  yum:
+    name: '*'
+    state: latest
     update_cache: yes
-    cache_valid_time: 86400
+  when:
+  - ansible_distribution == "CentOS"
 
-- name: Ubuntu - Install package
+- name: Install system updates for ubuntu
   apt:
-    name: "{{ packages }}"
-    state: present
-  vars:
-    packages:
-      - openjdk-11-jdk
-      - python3-pip
-      - net-tools
-      - nmap
-      - tree
-      - apt-transport-https
-      - curl
-      - docker.io
-      # - containerd.io
-      - snapd
-      - acl
+    name: '*'
+    state: latest
+    update_cache: yes
+  when:
+  - ansible_distribution == "Ubuntu"
 
-# - name: PI
-#   shell: |
-#     curl https://sh.rustup.rs -sSf | sh -s -- -y
-#   when: "'pi' in inventory_hostname"
+# - name: Ubuntu - Update APT
+#   apt:
+#     update_cache: yes
+#     cache_valid_time: 86400
+
+# - name: Ubuntu - Install package
+#   apt:
+#     name: "{{ packages }}"
+#     state: present
+#   vars:
+#     packages:
+#       - openjdk-11-jdk
+#       - python3-pip
+#       - net-tools
+#       - nmap
+#       - tree
+#       - apt-transport-https
+#       - curl
+#       - docker.io
+#       - snapd
+#       - acl
+- name: Install package
+  package: name="{{ item }}" state=latest
+  with_items:
+  - openjdk-11-jdk
+  - python3-pip
+  - net-tools
+  - nmap
+  - tree
+  - apt-transport-https
+  - curl
+  - docker.io
+  - snapd
+  - acl
+  - libxslt-devel
+  - libxml2-devel
+  ignore_errors: true
 
 - name: pip3 packages
   ansible.builtin.pip:
@@ -33,6 +59,7 @@
     - lxml
     - ssh_config
     - stormssh
+    - snap
   ignore_errors: true
 
 - name: Hostname

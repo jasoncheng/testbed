@@ -38,6 +38,8 @@
 - name: Local - Create local ssh config files
   tags: ['local-ssh']
   become_user: "{{ localUser }}"
+  vars:
+    onPremise: "'pi' in inventory_hostname"
   template:
     src: "templates/ssh_template.j2"
     dest: "{{ sshIncludeDir }}/{{ RESOURCE_PREFIX }}.conf"

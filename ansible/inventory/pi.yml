@@ -1,7 +1,7 @@
 [pi:children]
 
 [nodes]
-pi1 ansible_host=10.33.27.140 hostname='pi1'
+pi1 ansible_host=10.33.27.182 hostname='pi1'
 
 [pi]
 pi1

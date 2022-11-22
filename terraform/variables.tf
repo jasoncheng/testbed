@@ -24,7 +24,7 @@ variable "instance_type" {
 }
 
 variable "instance_count" {
-  default = 2
+  default = 0
 }
 
 variable "instance_ebs_size" {
