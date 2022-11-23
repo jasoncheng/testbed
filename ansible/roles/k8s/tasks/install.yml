@@ -1,16 +1,25 @@
+# Pi
 # /boot/cmdline.txt
 # cgroup_enable=memory 和 cgroup_memory=1
+
+- service_facts:
+  register: services
+  
+- set_fact: hasSnapd="{{ 'snapd' in services }}"
+
 - name: enable snapd
   systemd:
     name: snapd
     enabled: true
     state: started
+  when: hasSnapd
 
 - name: create snapd symbolic link
   file:
     src: /var/lib/snapd/snap
     dest: /snap
     state: link
+  when: hasSnapd
 
 - name: Create containerd config file
   file:
@@ -41,17 +50,21 @@
     path: "/etc/sysctl.d/99-kubernetes-cri.conf"
     state: "touch"
 
-# - name: Install helm
-#   shell: "snap install helm --classic"
-
-- name: Install helm
+- name: Install helm by snapd
   snap:
     name: helm
     classic: true
+  when: hasSnapd
 
-# - name: Init helm
-#   shell: helm init --stable-repo-url=https://charts.helm.sh/stable
-
+- name: Install helm by using script
+  shell: |
+    curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    chmod 700 get_helm.sh
+    ./get_helm.sh
+  environment:
+    VERIFY_CHECKSUM: "false"
+  when: not hasSnapd
+  
 - name: Add conf for containerd
   blockinfile:
     path: "/etc/sysctl.d/99-kubernetes-cri.conf"
@@ -63,21 +76,19 @@
 - name: Apply new settings
   command: sysctl --system
 
-- name: install containerd
+- name: install containerd for PI4
   shell: |
-    # apt-get install -y containerd acl || true
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sh get-docker.sh
+  when: isCentOS
+
+- name: config containerd
+  shell: |
     mkdir -p /etc/containerd
     containerd config default | sudo tee /etc/containerd/config.toml
     systemctl restart containerd
   when: groups.external is not defined or inventory_hostname not in groups['external']
-  register: result
   ignore_errors: true
-
-# - name: install containerd for PI4
-#   shell: |
-#     curl -fsSL https://get.docker.com -o get-docker.sh
-#     sh get-docker.sh
-#   when: result.stat.rc != 0
 
 - name: Disable swap
   shell: |
