@@ -1,4 +1,7 @@
-- name: Prepare
+---
+- ansible.builtin.import_playbook: env.yml
+
+- name: Provision
   hosts: nodes
   tags: ["base", "local-ssh"]
   gather_facts: true

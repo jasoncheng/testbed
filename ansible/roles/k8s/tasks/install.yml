@@ -50,21 +50,6 @@
     path: "/etc/sysctl.d/99-kubernetes-cri.conf"
     state: "touch"
 
-- name: Install helm by snapd
-  snap:
-    name: helm
-    classic: true
-  when: hasSnapd
-
-- name: Install helm by using script
-  shell: |
-    curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
-    chmod 700 get_helm.sh
-    ./get_helm.sh
-  environment:
-    VERIFY_CHECKSUM: "false"
-  when: not hasSnapd
-  
 - name: Add conf for containerd
   blockinfile:
     path: "/etc/sysctl.d/99-kubernetes-cri.conf"
@@ -76,7 +61,7 @@
 - name: Apply new settings
   command: sysctl --system
 
-- name: install containerd for PI4
+- name: install docker
   shell: |
     curl -fsSL https://get.docker.com -o get-docker.sh
     sh get-docker.sh
@@ -97,7 +82,7 @@
 
 - name: install and configure dependencies
   shell: curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-  when: isCentOS == False
+  when: not isCentOS
 
 - name: RHEL import gpg key
   shell: |
@@ -105,13 +90,13 @@
   when: isCentOS
 
 - set_fact: k8s_sourcelist="/etc/apt/sources.list.d/kubernetes.list"
-  when: isCentOS == False
+  when: not isCentOS
 
 - name: Create k8s repo file
   file:
     path: "{{ k8s_sourcelist }}"
     state: "touch"
-  when: isCentOS == False
+  when: not isCentOS
 
 - name: RHEL add k8s repo
   yum_repository:
@@ -129,13 +114,12 @@
     path: "{{ k8s_sourcelist }}"
     block: |
       deb https://apt.kubernetes.io/ kubernetes-xenial main
-  when: isCentOS == False
+  when: not isCentOS
 
-# - name: Install kubernets
-#   tags: ['install']
-#   shell: |
-#     apt-get update
-#     apt-get install -y kubelet kubeadm kubectl
+- name: apt update
+  apt:
+    update_cache: true
+  when: isUbuntu
 
 - name: Install k8s
   package:
@@ -146,3 +130,17 @@
     - kubelet
     - kubeadm
     - kubectl
+
+- name: Install helm by snapd
+  snap:
+    name: helm
+    classic: true
+  when: hasSnapd
+
+- name: Install helm by using script
+  shell: |
+    curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+  environment:
+    VERIFY_CHECKSUM: "false"
+  when: not hasSnapd
+  

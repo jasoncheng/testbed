@@ -16,8 +16,6 @@
     path: "{{ authKey }}"
   register: authKeyStat
 
-- debug: msg="{{ authKeyStat.stat.exists }}"
-
 - name: set authorized keys
   become_user: "{{ K8S_USER }}"
   authorized_key: user={{ K8S_USER }} key="{{ lookup('file', authKey) }}"

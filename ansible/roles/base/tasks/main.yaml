@@ -3,8 +3,7 @@
     name: '*'
     state: latest
     update_cache: yes
-  when:
-  - ansible_distribution == "CentOS"
+  when: isCentOS
 
 - name: Install system updates for ubuntu
   apt:
@@ -12,45 +11,34 @@
     state: latest
     update_cache: yes
   when:
-  - ansible_distribution == "Ubuntu"
+  - isUbuntu
 
-# - name: Ubuntu - Update APT
-#   apt:
-#     update_cache: yes
-#     cache_valid_time: 86400
-
-# - name: Ubuntu - Install package
-#   apt:
-#     name: "{{ packages }}"
-#     state: present
-#   vars:
-#     packages:
-#       - openjdk-11-jdk
-#       - python3-pip
-#       - net-tools
-#       - nmap
-#       - tree
-#       - apt-transport-https
-#       - curl
-#       - docker.io
-#       - snapd
-#       - acl
 - name: Install package
   package: name="{{ item }}" state=latest
   with_items:
-  - openjdk-11-jdk
   - python3-pip
   - net-tools
   - nmap
   - tree
-  - apt-transport-https
   - curl
-  - docker.io
   - snapd
   - acl
+  ignore_errors: true
+
+- name: Install package ubuntu only
+  package: name="{{ item }}" state=latest
+  with_items:
+  - openjdk-11-jdk
+  - apt-transport-https
+  - docker.io
+  when: isUbuntu
+
+- name: Install package CentOS only
+  package: name="{{ item }}" state=latest
+  with_items:
   - libxslt-devel
   - libxml2-devel
-  ignore_errors: true
+  when: isCentOS
 
 - name: pip3 packages
   ansible.builtin.pip:
@@ -132,10 +120,6 @@
     append: yes
   ignore_errors: true
   when: K8S_USER != OS_USER
-
-- name: AWS - uninstall amazon-ssm-agent
-  shell: "snap remove amazon-ssm-agent"
-  ignore_errors: true
 
 - name: Reboot
   include_role:

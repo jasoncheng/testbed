@@ -9,8 +9,8 @@ ceph_mon
 
 [nodes]
 %{ for index in range(length(all)) ~}
-${prefix}${index+1} ansible_host=${all[index]} hostname='${prefix}${index+1}' %{ if os == "centos" ~}ansible_python_interpreter=/usr/bin/python3
-%{ endif ~}
+${prefix}${index+1} ansible_host=${all[index]} hostname='${prefix}${index+1}' %{ if os == "centos" ~}ansible_python_interpreter=/usr/bin/python3%{ endif ~}
+
 %{ endfor ~}
 
 [external]%{for ip, str in other_servers}

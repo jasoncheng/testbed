@@ -1,4 +1,7 @@
 ---
+
+- ansible.builtin.import_playbook: env.yml
+
 - name: Kubernetes Cluster
   hosts: k8sS, k8sM
   become: true
@@ -25,7 +28,7 @@
   tags: ['ingress-nginx']
   tasks:
     - shell: |
-        helm3 upgrade --install ingress-nginx ingress-nginx \
+        helm upgrade --install ingress-nginx ingress-nginx \
         --repo https://kubernetes.github.io/ingress-nginx \
         --namespace ingress-nginx --create-namespace --set controller.hostNetwork=true,controller.kind=DaemonSet
     - name: remove ValidatingWebhookConfiguration
