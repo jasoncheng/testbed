@@ -1,9 +1,15 @@
+- name: if pi4 do something...
+  include_role:
+    name: base
+    tasks_from: pi4
+  when: is_pie4
+
 - name: Install system updates for centos
   yum:
     name: '*'
     state: latest
     update_cache: yes
-  when: isCentOS
+  when: is_cent_os
 
 - name: Install system updates for ubuntu
   apt:
@@ -11,34 +17,35 @@
     state: latest
     update_cache: yes
   when:
-  - isUbuntu
+  - is_ubuntu_os
 
 - name: Install package
   package: name="{{ item }}" state=latest
   with_items:
+  - python3
   - python3-pip
   - net-tools
   - nmap
   - tree
   - curl
-  - snapd
   - acl
   ignore_errors: true
 
 - name: Install package ubuntu only
   package: name="{{ item }}" state=latest
   with_items:
+  - snapd
   - openjdk-11-jdk
   - apt-transport-https
   - docker.io
-  when: isUbuntu
+  when: is_ubuntu_os
 
 - name: Install package CentOS only
   package: name="{{ item }}" state=latest
   with_items:
   - libxslt-devel
   - libxml2-devel
-  when: isCentOS
+  when: is_cent_os
 
 - name: pip3 packages
   ansible.builtin.pip:

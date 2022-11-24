@@ -1,0 +1,4 @@
+- name: expand disk space
+  ansible.builtin.shell: rootfs-expand 
+  no_log: true
+  failed_when: false

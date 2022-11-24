@@ -1,0 +1,65 @@
+- name: Turn off firewall
+  ansible.builtin.systemd:
+    state: stopped
+    name: firewalld
+    enabled: no
+
+- name: Turn off selinux temporary
+  ansible.builtin.shell: setenforce 0
+  no_log: true
+  failed_when: false
+
+- name: Turn off selinux forever
+  ansible.builtin.lineinfile:
+    path: "/etc/selinux/config"
+    regexp: '^SELINUX=(.*)$'
+    line: 'SELINUX=disabled'
+    backup: yes
+
+- name: Pi4 - cgroup read cmdline.txt
+  ansible.builtin.shell: cat /boot/cmdline.txt
+  register: cmdline
+
+- name: Pi4 - cgroup split as list
+  set_fact:
+    cmds: "{{ cmdline.stdout | split(' ') }}"
+    cmds_filter: []
+
+- name: Pi4 - cgroup filter 
+  set_fact:
+    cmds_filter: "{{ cmds_filter + [item] }}"
+  with_items: "{{ cmds }}"
+  when:
+  - "'cgroup_enable' not in item"
+  - "'cgroup_memory' not in item"
+
+- name: Pi4 - cgroup init var
+  set_fact:
+    list_cmds: "{{ cmds_filter }}"
+
+- name: Pi4 - cgroup add into cmdline.txt
+  set_fact:
+    list_cmds: "{{ list_cmds + [item] }}"
+  with_items:
+  - "cgroup_enable=memory"
+  - "cgroup_memory=1"
+
+- name: Pi4 - final pi cmdline.txt
+  set_fact: cmdline="{{ list_cmds | join(' ') }}"
+
+- name: Pi4 - debug
+  debug: msg="{{ cmdline }}"
+
+- name: Pi4 - set cgroup
+  ansible.builtin.lineinfile:
+    path: "/boot/cmdline.txt"
+    regexp: '{{ list_cmds[0] }}'
+    line: "{{ cmdline }}"
+    mode: 0755
+
+- name: reboot
+  ansible.builtin.reboot:
+    msg: "Reboot initiated."
+    reboot_timeout: 300
+    connect_timeout: 5
+    test_command: whoami
