@@ -1,30 +1,32 @@
 - name: Check if cephadm exist
-  shell: command -v cephadm
+  ansible.builtin.shell: command -v cephadm
   register: cephadmBin
   failed_when: false
   no_log: true
 
 - name: Download Cephadm
-  shell: |
+  ansible.builtin.shell: |
     curl --silent --remote-name --location https://github.com/ceph/ceph/raw/pacific/src/cephadm/cephadm
     chmod +x cephadm
     mv cephadm /usr/local/bin/
   when: cephadmBin.rc != 0
 
 - name: Copy ssh private key
-  copy:
+  ansible.builtin.copy:
     remote_src: yes
     src: "~/.ssh/id_rsa"
     dest: "~/cephadm_private_key"
     mode: 0600
 
 - name: Add repo
-  # shell: cephadm add-repo --release pacific
-  shell: cephadm add-repo --release quincy
+  ansible.builtin.shell: cephadm add-repo --release quincy
+  when: not is_pi4 or not is_cent_os 
 
 - name: Install
-  shell: cephadm install {{ item }}
+  ansible.builtin.shell: |
+    cephadm install {{ item }}
   with_items:
   - ""
   - "ceph-common"
   - "ceph-deploy"
+  failed_when: false

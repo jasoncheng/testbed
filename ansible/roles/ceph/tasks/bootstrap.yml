@@ -1,24 +1,29 @@
 
 - name: Check if bootstrap already
-  shell: ceph orch host ls|grep _admin
+  ansible.builtin.shell: ceph orch host ls|grep _admin
   register: _adminSet
   failed_when: false
   timeout: 60
   no_log: true
 
-- set_fact: isHealth="{{ _adminSet.rc in [0] }}"
+- name: set fact
+  set_fact: isHealth="{{ _adminSet.rc in [0] }}"
 
-- set_fact: fetch_hosts="{{ groups['ceph'] }}"
+- name: set fetch hosts
+  set_fact: fetch_hosts="{{ groups['ceph'] }}"
 
-- include_role:
+- name: is health
+  ansible.builtin.include_role:
     name: base
     tasks_from: gatherfact.yml
   when: isHealth != true
 
-- shell: cp ~/.ssh/config /tmp/cephadm-ssh-config
+- ansible.builtin.shell: cp ~/.ssh/config /tmp/cephadm-ssh-config
+
+# - debug: msg="IP --> {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
 
 - name: Bootstrap
-  shell: |
+  ansible.builtin.shell: |
     cephadm bootstrap --mon-ip {{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }} \
       --initial-dashboard-user {{ CEPH_USER }} \
       --initial-dashboard-password {{ CEPH_PASS }} \
@@ -30,5 +35,6 @@
   when: isHealth != true
   ignore_errors: true
 
-- debug: msg="{{ result }}"
+- name: debug
+  ansible.builtin.debug: msg="{{ result }}"
   when: result.stdout is defined

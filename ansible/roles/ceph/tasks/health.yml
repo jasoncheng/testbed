@@ -1,11 +1,12 @@
 - name: checking..
   become: true
   become_user: root
-  shell: ceph health
+  ansible.builtin.shell: ceph health
   register: healthResult
   until: healthResult.stdout == "HEALTH_OK"
   retries: 10
   delay: 12
   when: inventory_hostname in groups['ceph_adm']
 
-- set_fact: isHealth="{{ healthResult.stdout is defined and healthResult.stdout == "HEALTH_OK" }}"
+- name: set isHealth
+  set_fact: isHealth="{{ healthResult.stdout is defined and healthResult.stdout == "HEALTH_OK" }}"

@@ -2,22 +2,12 @@
   include_role:
     name: base
     tasks_from: pi4
-  when: is_pie4
+  when: is_pi4
 
-- name: Install system updates for centos
-  yum:
-    name: '*'
-    state: latest
-    update_cache: yes
-  when: is_cent_os
-
-- name: Install system updates for ubuntu
-  apt:
-    name: '*'
-    state: latest
-    update_cache: yes
-  when:
-  - is_ubuntu_os
+- name: Upgrade all package
+  include_role:
+    name: base
+    tasks_from: pkg-upgrade
 
 - name: Install package
   package: name="{{ item }}" state=latest
@@ -45,6 +35,7 @@
   with_items:
   - libxslt-devel
   - libxml2-devel
+  - bind-utils
   when: is_cent_os
 
 - name: pip3 packages

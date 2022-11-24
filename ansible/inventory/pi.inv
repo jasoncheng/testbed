@@ -1,4 +1,5 @@
 [pi:children]
+ceph
 
 [nodes]
 pi1 ansible_host=10.33.27.182 hostname='pi1'
@@ -10,3 +11,9 @@ pi1
 pi1
 
 [k8sS]
+
+[ceph]
+pi1
+
+[ceph_adm]
+pi1

@@ -19,7 +19,8 @@
 
 - debug: msg="{{ result }}"
 
-- set_fact: fsid="{{ result.stdout }}"
+- nmae: set fsid
+  set_fact: fsid="{{ result.stdout }}"
 
 - shell: ceph mon stat|awk '{print $(NF)}'
   become: true

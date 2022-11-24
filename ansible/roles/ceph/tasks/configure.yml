@@ -1,36 +1,36 @@
 
 - name: Add host
-  shell: ceph orch host add {{ item }} $(dig +short {{item}})
+  ansible.builtin.shell: ceph orch host add {{ item }} $(dig +short {{item}})
   when: inventory_hostname != item
   with_items: "{{ groups['ceph'] }}"
 
 - name: Add label for _admin
-  shell: ceph orch host label add {{ item }} _admin
+  ansible.builtin.shell: ceph orch host label add {{ item }} _admin
   when: inventory_hostname != groups['ceph_adm']
   with_items: "{{ groups['ceph'] }}"
 
 - name: Add label for MON
-  shell: ceph orch host label add {{ item }} mon
+  ansible.builtin.shell: ceph orch host label add {{ item }} mon
   when: inventory_hostname != item
   with_items: "{{ groups['ceph_mon'] }}"
 
 - name: Add others as _admin
-  shell: ceph orch host lable add {{ item }} _admin
+  ansible.builtin.shell: ceph orch host lable add {{ item }} _admin
   when: isAdmin == false
   with_items: "{{ groups['ceph'] }}"
 
 - name: Apply config
-  shell: ceph orch apply mon {{ item }}
+  ansible.builtin.shell: ceph orch apply mon {{ item }}
   with_items: "{{ groups['ceph_mon'] }}"
 
 - name: Add label for OSD
-  shell: ceph orch host label add {{ item }} osd
+  ansible.builtin.shell: ceph orch host label add {{ item }} osd
   with_items: "{{ groups['ceph_mon'] }}"
 
 - name: Add AWS EBS to OSD
-  shell: ceph orch daemon add osd {{ item }}:{{ lvm }}
+  ansible.builtin.shell: ceph orch daemon add osd {{ item }}:{{ lvm }}
   with_items: "{{ groups['ceph_osd'] }}"
   ignore_errors: true
 
 - name: Apply all-available-devices
-  shell: ceph orch apply osd --all-available-devices
+  ansible.builtin.shell: ceph orch apply osd --all-available-devices

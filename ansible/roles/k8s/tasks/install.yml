@@ -74,7 +74,7 @@
     name: docker
     enabled: true
     state: started
-  when: is_cent_os and is_pie4
+  when: is_cent_os and is_pi4
 
 - name: config containerd
   ansible.builtin.shell: |
@@ -116,7 +116,7 @@
     description: for kubernetes
     enabled: yes
     file: k8s_repo
-    baseurl: "https://packages.cloud.google.com/yum/repos/kubernetes-el7-{{ 'aarch64' if is_pie4 else 'x86_64' }}"
+    baseurl: "https://packages.cloud.google.com/yum/repos/kubernetes-el7-{{ 'aarch64' if is_pi4 else 'x86_64' }}"
   when: is_cent_os
 
 - name: Add k8s source

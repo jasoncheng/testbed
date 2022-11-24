@@ -1,0 +1,14 @@
+- name: Install system updates for centos
+  yum:
+    name: '*'
+    state: latest
+    update_cache: yes
+  when: is_cent_os
+
+- name: Install system updates for ubuntu
+  apt:
+    name: '*'
+    state: latest
+    update_cache: yes
+  when:
+  - is_ubuntu_os
