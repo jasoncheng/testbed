@@ -27,17 +27,21 @@
   gather_facts: false
   tags: ['ingress-nginx']
   tasks:
+    - name: If k8s only have single node
+      ansible.builtin.shell: |
+        kubectl taint node pi1 node-role.kubernetes.io/control-plane:NoSchedule-
+      when: cluster_size | int < 3
     - ansible.builtin.shell: |
         helm upgrade --install ingress-nginx ingress-nginx \
         --repo https://kubernetes.github.io/ingress-nginx \
         --namespace ingress-nginx --create-namespace --set controller.hostNetwork=true,controller.kind=DaemonSet
-      when: cluster_size | int > 2
+      # when: cluster_size | int > 2
     - name: remove ValidatingWebhookConfiguration
       ansible.builtin.shell: kubectl delete -A ValidatingWebhookConfiguration ingress-nginx-admission
-      when: cluster_size | int > 2
+      # when: cluster_size | int > 2
     - name: warning message
       ansible.builtin.debug:
-        msg: "k8s ingress nginx require at least 3 node on cluster"
+        msg: "k8s ingress nginx require at least 3 node on cluster, so we set taint none on your single node"
       when: cluster_size | int < 3
 
 # - name: K8S - Util
