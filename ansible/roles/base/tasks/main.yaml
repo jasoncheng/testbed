@@ -36,6 +36,7 @@
   - libxslt-devel
   - libxml2-devel
   - bind-utils
+  - epel-release
   when: is_cent_os
 
 - name: pip3 packages

@@ -1,3 +1,8 @@
+- name: Setup Ceph Release Name
+  ansible.builtin.set_fact:
+    # ceph_release_name: "{{ 'octopus' if os_version is regex('^7.') else 'pacific'}}"
+    ceph_release_name: "{{ 'octopus' if is_cent_os and os_version is regex('^7.') else 'quincy'}}"
+
 - name: Check if cephadm exist
   ansible.builtin.shell: command -v cephadm
   register: cephadmBin
@@ -6,7 +11,7 @@
 
 - name: Download Cephadm
   ansible.builtin.shell: |
-    curl --silent --remote-name --location https://github.com/ceph/ceph/raw/pacific/src/cephadm/cephadm
+    curl --silent --remote-name --location https://github.com/ceph/ceph/raw/{{ ceph_release_name }}/src/cephadm/cephadm
     chmod +x cephadm
     mv cephadm /usr/local/bin/
   when: cephadmBin.rc != 0
@@ -19,7 +24,8 @@
     mode: 0600
 
 - name: Add repo
-  ansible.builtin.shell: cephadm add-repo --release quincy
+  # ansible.builtin.shell: cephadm add-repo --release quincy
+  ansible.builtin.shell: cephadm add-repo --release {{ ceph_release_name }}
   when: not is_pi4 or not is_cent_os 
 
 - name: Install

@@ -17,3 +17,6 @@ pi1
 
 [ceph_adm]
 pi1
+
+[ceph_mon]
+pi1

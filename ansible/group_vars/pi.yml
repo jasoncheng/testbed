@@ -35,5 +35,7 @@ CEPHFS: 'cephfs'
 CEPHFS_CLIENT: 'k8scsi'
 CEPHFS_DATA: 'cephfs_data'
 CEPHFS_METADATA: 'cephfs_metadata'
+CEPHFS_CLIENT_FS: 'fs'
+CEPH_RBD: 'k8s'
 
 # ansible_python_interpreter: '/usr/bin/python3'
