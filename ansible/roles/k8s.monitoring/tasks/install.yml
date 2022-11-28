@@ -1,40 +1,51 @@
-- name: Upgrade all apt packages
-  become: true
-  apt: upgrade=dist force_apt_get=yes
-
 - name: Install hey module for stress testing
   become: true
-  apt:
-    pkg:
-    - "hey"
+  ansible.builtin.package:
+    state: present
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - hey
+    - kubernetes
+  ignore_errors: true
 
 - name: Install pip package
   ansible.builtin.pip:
     name: "{{ item }}"
+    # executable: pip3
   with_items:
   - "kubernetes"
   - "docker"
 
 - name: Add repo of Prometheus and Grafana
-  kubernetes.core.helm_repository:
-    name: prometheus-community
-    repo_url: "{{ chart_prometheus }}"
+  ansible.builtin.shell: |
+    helm repo add prometheus-community {{ chart_prometheus }}
+    helm repo update
+    # helm upgrade -i prometheus prometheus-community/prometheus -n {{ prometheus_namespace }}
+  # kubernetes.core.helm_repository:
+  #   name: prometheus-community
+  #   repo_url: "{{ chart_prometheus }}"
   
 - name: Add repo of Keda
-  kubernetes.core.helm_repository:
-    name: kedacore
-    repo_url: "{{ chart_keda }}"
+  ansible.builtin.shell: |
+    helm repo add kedacore {{ chart_keda }}
+    helm repo update
+    # helm upgrade -i keda kedacore/keda
+  # kubernetes.core.helm_repository:
+  #   name: kedacore
+  #   repo_url: "{{ chart_keda }}"
 
-- set_fact:
+- name: Set prometheus file
+  ansible.builtin.set_fact:
     value_file: "prometheus-values-{{ prometheus_stack_version }}.yaml"
 
 - name: Upload file
-  copy:
+  ansible.builtin.copy:
     src: "{{ playbook_dir }}/roles/{{ role_name }}/files/{{ value_file }}"
     dest: "/tmp/{{ value_file }}"
 
 - name: Setup grafana password
-  lineinfile:
+  ansible.builtin.lineinfile:
     regexp: "  adminPassword"
     line: "  adminPassword: {{ grafana_password }}"
     path: "/tmp/{{ value_file }}"
@@ -53,7 +64,7 @@
 #   register: result
 
 - name: "Create namespace {{ prometheus_namespace }}"
-  shell: "kubectl create ns {{ prometheus_namespace }}"
+  ansible.builtin.shell: "kubectl create ns {{ prometheus_namespace }}"
   ignore_errors: true
 
 # - name: Iptables for allow ALL
@@ -63,30 +74,30 @@
 #     iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X
 
 - name: Check resource dir if exists
-  stat:
+  ansible.builtin.stat:
     path: "{{ tmpDir }}"  
   register: dirStat
 
 - name: Delete previous apply resources
-  shell: |
+  ansible.builtin.shell: |
     kubectl delete -f {{ tmpDir }}
   when: dirStat.stat.exists
   ignore_errors: true
 
 - name: Remove hook
-  shell: |
+  ansible.builtin.shell: |
     kubectl delete -A ValidatingWebhookConfiguration prometheus-stack-kube-prom-admission || true
 
 - name: TODO - remove scaledobject
-  shell: "kubectl delete scaledobject/http-request-total-scaledobject -n {{ K8S_DEFAULE_NAMESPACE }} || true"
+  ansible.builtin.shell: "kubectl delete scaledobject/http-request-total-scaledobject -n {{ K8S_DEFAULE_NAMESPACE }} || true"
 
 - name: Install Keda
-  shell: |
+  ansible.builtin.shell: |
     helm uninstall keda -n keda
   ignore_errors: true
 
 - name: Install Prometheus and Grafana w/ predefined scrape config
-  shell: |
+  ansible.builtin.shell: |
     helm upgrade --install -f /tmp/prometheus-values-{{ prometheus_stack_version }}.yaml prometheus-stack prometheus-community/kube-prometheus-stack \
       -n {{ prometheus_namespace }} --version {{ prometheus_stack_version }} --create-namespace
       # --no-hooks
@@ -106,5 +117,5 @@
 #   register: result
 
 - name: Install Keda
-  shell: |
+  ansible.builtin.shell: |
     helm upgrade --install keda kedacore/keda --namespace keda --create-namespace

@@ -1,6 +1,8 @@
 - name: Docker - prevent login failure
   become: true
-  
-  shell: "chmod 666 /var/run/docker.sock"
+  ansible.builtin.shell: "chmod 666 /var/run/docker.sock"
+
 - name: Docker - Login
-  docker_login: username="{{ DOCKER_USER }}" password="{{ DOCKER_PASS }}"
+  ansible.builtin.shell: |
+    docker login -u {{ DOCKER_USER }} -p {{ DOCKER_PASS }}
+  # docker_login: username="{{ DOCKER_USER }}" password="{{ DOCKER_PASS }}"

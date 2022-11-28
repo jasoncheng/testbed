@@ -1,45 +1,46 @@
-- name: Install monitoring
-  include_role:
-    name: k8s.monitoring
-    tasks_from: install.yml
+# - name: Install monitoring
+#   ansible.builtin.include_role:
+#     name: k8s.monitoring
+#     tasks_from: install.yml
 
-- name: Reboot
-  include_role:
-    name: base
-    tasks_from: reboot.yml
+# - name: Reboot
+#   ansible.builtin.include_role:
+#     name: base
+#     tasks_from: reboot.yml
 
 - name: Docker login
-  include_role:
+  ansible.builtin.include_role:
     name: docker
     tasks_from: main.yml
 
 - name: Build and push test image
-  include_role:
+  ansible.builtin.include_role:
     name: k8s.monitoring
     tasks_from: image.yml
 
 - name: Create k8s HPA test app
-  include_role:
+  ansible.builtin.include_role:
     name: k8s.monitoring
     tasks_from: apply.yml
 
 - name: Get ingress-nginx NodePort
-  shell: "kubectl get svc --no-headers -n ingress-nginx ingress-nginx-controller -o custom-columns=PORT:spec.ports[0].nodePort"
+  ansible.builtin.shell: "kubectl get svc --no-headers -n ingress-nginx ingress-nginx-controller -o custom-columns=PORT:spec.ports[0].nodePort"
   register: node_port
 
-- set_fact: nodeport="{{ node_port.stdout }}"
+- name: Set NodePort
+  ansible.builtin.set_fact: nodeport="{{ node_port.stdout }}"
 
 - name: Verify
-  include_role:
+  ansible.builtin.include_role:
     name: k8s.monitoring
     tasks_from: verify.yml
 
 - name: Test
-  include_role:
+  ansible.builtin.include_role:
     name: k8s.monitoring
     tasks_from: test.yml
 
 - name: EndPoint
-  include_role:
+  ansible.builtin.include_role:
     name: k8s.monitoring
     tasks_from: output.yml
