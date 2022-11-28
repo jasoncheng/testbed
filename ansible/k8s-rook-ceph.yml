@@ -1,0 +1,6 @@
+---
+- name: Rook Ceph
+  hosts: k8sM
+  gather_facts: false
+  roles:
+  - { role: k8s.rook.ceph }

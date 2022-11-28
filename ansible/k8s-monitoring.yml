@@ -4,6 +4,6 @@
 
 - name: Monitoring
   hosts: nodes[0]
-  gather_fact: no
+  gather_facts: no
   roles:
   - { role: k8s.monitoring }

@@ -1,0 +1,26 @@
+- name: Add repo
+  kubernetes.core.helm_repository:
+    name: rook-release
+    repo_url: https://charts.rook.io/release
+
+- name: Deploy operator
+  kubernetes.core.helm:
+    name: rook-ceph
+    create_namespace: true
+    release_namespace: rook-ceph
+    chart_ref: rook-release/rook-ceph
+    update_repo_cache: true
+    release_name: rook-ceph
+    # state: absent
+
+- name: Deploy cluster
+  kubernetes.core.helm:
+    create_namespace: true
+    release_namespace: rook-ceph
+    chart_ref: rook-release/rook-ceph-cluster
+    update_repo_cache: true
+    release_name: rook-ceph-cluster
+    # state: absent
+    values:
+      monitoring.enabled: true
+      toolbox.enabled: true
