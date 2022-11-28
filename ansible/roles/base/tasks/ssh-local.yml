@@ -1,14 +1,15 @@
-
-- set_fact: sshIncludeDir="~/.ssh/config.d" localUser="{{ lookup('env', 'USER') }}"
+- name: Set sshIncludeDir
+  ansible.builtin.set_fact: sshIncludeDir="~/.ssh/config.d" localUser="{{ lookup('env', 'USER') }}"
   tags: ['local-ssh']
 
-- set_fact: keyPath="../terraform/{{ RESOURCE_PREFIX }}.pem"
+- name: Set keyPath
+  ansible.builtin.set_fact: keyPath="../terraform/{{ RESOURCE_PREFIX }}.pem"
   tags: ['local-ssh']
 
 - name: Local - Copy server private key to ~/.ssh
   tags: ['local-ssh']
   become_user: "{{ localUser }}"
-  copy:
+  ansible.builtin.copy:
     src: "{{ keyPath }}"
     dest: "~/.ssh/"
     mode: 0400
@@ -19,7 +20,7 @@
 - name: Local - Update ssh ~/.ssh/config.d folder
   tags: ['local-ssh']
   become_user: "{{ localUser }}"
-  lineinfile:
+  ansible.builtin.lineinfile:
     path: "~/.ssh/config"
     regexp: "^Include "
     line: "Include config.d/*"
@@ -30,19 +31,20 @@
 - name: Local - Create .ssh/config.d folder
   tags: ['local-ssh']
   become_user: "{{ localUser }}"
-  file:
+  ansible.builtin.file:
     path: "{{ sshIncludeDir }}"
     state: directory
+    mode: 0744
   delegate_to: localhost
 
 - name: Local - Create local ssh config files
   tags: ['local-ssh']
   become_user: "{{ localUser }}"
   vars:
-    onPremise: "'pi' in inventory_hostname"
-  template:
+    on_premise: "'pi' in inventory_hostname"
+  ansible.builtin.template:
     src: "templates/ssh_template.j2"
     dest: "{{ sshIncludeDir }}/{{ RESOURCE_PREFIX }}.conf"
-    mode: 0644
+    mode: 0744
+    lstrip_blocks: true
   delegate_to: localhost
-  

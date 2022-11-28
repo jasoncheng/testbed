@@ -19,6 +19,8 @@
   - tree
   - curl
   - acl
+  # args:
+  #   executable: /usr/bin/python
   ignore_errors: true
 
 - name: Install package ubuntu only

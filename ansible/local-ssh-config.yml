@@ -1,0 +1,10 @@
+---
+
+- name: Config local ssh
+  hosts: all
+  gather_facts: true
+  tasks:
+  - name: Generate ssh config
+    ansible.builtin.include_role:
+      name: base
+      tasks_from: ssh-local

@@ -1,12 +1,7 @@
-# - name: Install monitoring
-#   ansible.builtin.include_role:
-#     name: k8s.monitoring
-#     tasks_from: install.yml
-
-# - name: Reboot
-#   ansible.builtin.include_role:
-#     name: base
-#     tasks_from: reboot.yml
+- name: Install monitoring
+  ansible.builtin.include_role:
+    name: k8s.monitoring
+    tasks_from: install.yml
 
 - name: Docker login
   ansible.builtin.include_role:
@@ -39,6 +34,7 @@
   ansible.builtin.include_role:
     name: k8s.monitoring
     tasks_from: test.yml
+  when: not is_pi4 or not is_cent_os or os_version is not regex('^7.')
 
 - name: EndPoint
   ansible.builtin.include_role:

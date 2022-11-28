@@ -8,6 +8,9 @@
 
 - name: "Stress Test"
   shell: "hey -n 90000 -m GET http://{{ RESOURCE_PREFIX }}{{ groups['nodes'] | length }}:{{ nodeport }}/metrics"
+  # shell: |
+  #   docker pull williamyeh/hey
+  #   docker run --rm  williamyeh/hey -n 90000 -c 100 http://{{ RESOURCE_PREFIX }}{{ groups['nodes'] | length }}:{{ nodeport }}/metrics
   register: result
 
 - debug: msg="{{ result.stdout_lines }}"

@@ -1,9 +1,9 @@
-# - name: Docker login
-#   hosts: nodes[0]
-#   roles:
-#   - { role: docker }
+---
+
+- ansible.builtin.import_playbook: env.yml
 
 - name: Monitoring
   hosts: nodes[0]
+  gather_fact: no
   roles:
   - { role: k8s.monitoring }

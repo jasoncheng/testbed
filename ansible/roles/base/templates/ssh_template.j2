@@ -1,8 +1,7 @@
 {% for host in groups['nodes'] %}
 Host {{ host }}
     User {{ OS_USER }}
-    {% if onPremise %}{% else %}IdentityFile ~/.ssh/{{ RESOURCE_PREFIX }}.pem{% endif %}
-    
+    {% if on_premise %}{% else %}IdentityFile ~/.ssh/{{ RESOURCE_PREFIX }}.pem{% endif %}
     HostName {{ hostvars[host]['ansible_host'] }}
     StrictHostKeyChecking no
     UserKnownHostsFile=/dev/null

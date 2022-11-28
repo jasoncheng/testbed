@@ -10,6 +10,9 @@ pi4 ansible_host=10.33.27.137 hostname='pi4'
 [pi]
 pi[1:4]
 
+[pi:vars]
+ansible_python_interpreter=/usr/bin/python3
+
 [k8sM]
 pi1
 

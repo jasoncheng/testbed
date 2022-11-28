@@ -30,30 +30,30 @@
 
 # - wait_for: timeout=30
 
-- name: update config host to public IP
-  replace:
-    path: "{{ k8sConfigFile }}"
-    regexp: 'https:\/\/.*:([0-9]+)'
-    replace: https://{{ groups['k8sM'][0] }}:\1
-    backup: true
-  when: inventory_hostname in groups['external']
+# - name: update config host to public IP
+#   replace:
+#     path: "{{ k8sConfigFile }}"
+#     regexp: 'https:\/\/.*:([0-9]+)'
+#     replace: https://{{ groups['k8sM'][0] }}:\1
+#     backup: true
+#   when: inventory_hostname in groups['external']
 
-- name: Add insecure-skip-tls-verify true
-  lineinfile:
-    path: "{{ k8sConfigFile }}"
-    insertafter: "server"
-    regexp: "insecure-skip-tls-verify"
-    line: "    insecure-skip-tls-verify: true"
-    backup: true
-  when: inventory_hostname in groups['external']
+# - name: Add insecure-skip-tls-verify true
+#   lineinfile:
+#     path: "{{ k8sConfigFile }}"
+#     insertafter: "server"
+#     regexp: "insecure-skip-tls-verify"
+#     line: "    insecure-skip-tls-verify: true"
+#     backup: true
+#   when: inventory_hostname in groups['external']
 
-- name: Comment out certificate-authority-data
-  replace:
-    path: "{{ k8sConfigFile }}"
-    regexp: 'certificate-authority-data' 
-    replace: '#certificate-authority-data'
-    backup: true
-  when: inventory_hostname in groups['external']
+# - name: Comment out certificate-authority-data
+#   replace:
+#     path: "{{ k8sConfigFile }}"
+#     regexp: 'certificate-authority-data' 
+#     replace: '#certificate-authority-data'
+#     backup: true
+#   when: inventory_hostname in groups['external']
 
 - name: Replace join host ip
   become: true

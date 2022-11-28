@@ -1,14 +1,13 @@
-
 - set_fact:
     goProjectDir: "{{ playbook_dir }}/roles/{{ role_name }}/files/goHttpRequestTotal"
 
 - name: Create directory
-  file:
+  ansible.builtin.file:
     state: directory
     path: "{{ tmpImageDir }}"
 
 - name: Copy files
-  copy:
+  ansible.builtin.copy:
     src: "{{ goProjectDir }}/{{ item }}"
     dest: "{{ tmpImageDir }}/"
   with_items:
