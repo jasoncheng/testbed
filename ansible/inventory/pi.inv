@@ -8,12 +8,13 @@ pi3 ansible_host=10.33.27.191 hostname='pi3'
 pi4 ansible_host=10.33.27.137 hostname='pi4'
 
 [pi]
-pi1
+pi[1:4]
 
 [k8sM]
 pi1
 
 [k8sS]
+pi[2:4]
 
 [ceph]
 pi1
