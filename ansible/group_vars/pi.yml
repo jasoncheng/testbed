@@ -20,8 +20,8 @@ DIR_NAME: '{{ DATA_PATH }}/nn'
 # TEST_HBASE_SERVER: '{{ RESOURCE_PREFIX }}1'
 K8S_JOIN_COMMAND_FILE: '/tmp/k8s_join_command'
 # K8S_USER: 'kube'
-#K8S_USER: 'ubuntu'
-#OS_USER: 'ubuntu'
+K8S_USER: 'root'
+OS_USER: 'root'
 # K8S_DEFAULE_NAMESPACE: "{{ lookup('env', 'USER') }}"
 K8S_DEFAULE_NAMESPACE: 'default'
 # 如果自裝zk, 使用false; 或者用true, hbase會負責跑zookeeper
@@ -37,5 +37,4 @@ CEPHFS_DATA: 'cephfs_data'
 CEPHFS_METADATA: 'cephfs_metadata'
 CEPHFS_CLIENT_FS: 'fs'
 CEPH_RBD: 'k8s'
-
 # ansible_python_interpreter: '/usr/bin/python3'
