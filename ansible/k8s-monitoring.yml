@@ -5,5 +5,7 @@
 - name: Monitoring
   hosts: nodes[0]
   gather_facts: no
+  # vars_files:
+  # - vars/all.yml
   roles:
   - { role: k8s.monitoring }

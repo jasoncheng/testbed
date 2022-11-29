@@ -1,0 +1,8 @@
+DOMAINS:
+  {
+    "grafana": "grafana",
+    "prometheus": "prome",
+    "k8sDashboard": "k8s",
+    "ceph": "ceph",
+    "httpreq": "httpreq",
+  }

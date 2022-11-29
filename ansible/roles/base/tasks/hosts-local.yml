@@ -10,3 +10,16 @@
   with_items: "{{ groups['nodes'] }}"
   when: inventory_hostname == groups['nodes'][0]
 
+- name: Update service domains to etc/hosts
+  become: true
+  vars:
+    random_host: "{{ RESOURCE_PREFIX }}{{ groups['nodes'] | length | random(start=1) }}"
+  ansible.builtin.lineinfile:
+    dest: "/etc/hosts"
+    regexp: "{{ item.value }}$"
+    line: "{{ hostvars[random_host].ansible_host }}   {{ item.value }}"
+    state: present
+  tags: ['base', 'etchosts']
+  delegate_to: localhost
+  with_dict: "{{ DOMAINS }}"
+  when: inventory_hostname == groups['nodes'][0]

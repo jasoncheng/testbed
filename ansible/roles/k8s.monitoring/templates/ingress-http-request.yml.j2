@@ -16,7 +16,7 @@ spec:
       port:
         number: 9121
   rules:
-  - host: {{ RESOURCE_PREFIX }}3
+  - host: {{ DOMAINS['httpreq'] }}
     http:
       paths:
       - path: /(|$)(.*)

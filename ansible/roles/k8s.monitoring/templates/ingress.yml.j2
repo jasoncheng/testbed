@@ -15,7 +15,7 @@ spec:
       port:
         number: 80
   rules:
-  - host: {{ RESOURCE_PREFIX }}2
+  - host: {{ DOMAINS['prometheus'] }}
     http:
       paths:
       - path: /
@@ -25,7 +25,7 @@ spec:
             name: prometheus-stack-kube-prom-prometheus
             port:
               number: 9090
-  - host: {{ RESOURCE_PREFIX }}1
+  - host: {{ DOMAINS['grafana'] }}
     http:
       paths:
       - path: /

@@ -22,5 +22,7 @@
     release_name: rook-ceph-cluster
     # state: absent
     values:
-      monitoring.enabled: true
-      toolbox.enabled: true
+      monitoring:
+        enabled: true
+      toolbox:
+        enabled: true
