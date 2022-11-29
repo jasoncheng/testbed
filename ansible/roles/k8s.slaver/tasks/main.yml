@@ -28,33 +28,6 @@
     dest: "{{ K8S_JOIN_COMMAND_FILE }}"
     mode: 0777
 
-# - wait_for: timeout=30
-
-# - name: update config host to public IP
-#   replace:
-#     path: "{{ k8sConfigFile }}"
-#     regexp: 'https:\/\/.*:([0-9]+)'
-#     replace: https://{{ groups['k8sM'][0] }}:\1
-#     backup: true
-#   when: inventory_hostname in groups['external']
-
-# - name: Add insecure-skip-tls-verify true
-#   lineinfile:
-#     path: "{{ k8sConfigFile }}"
-#     insertafter: "server"
-#     regexp: "insecure-skip-tls-verify"
-#     line: "    insecure-skip-tls-verify: true"
-#     backup: true
-#   when: inventory_hostname in groups['external']
-
-# - name: Comment out certificate-authority-data
-#   replace:
-#     path: "{{ k8sConfigFile }}"
-#     regexp: 'certificate-authority-data' 
-#     replace: '#certificate-authority-data'
-#     backup: true
-#   when: inventory_hostname in groups['external']
-
 - name: Replace join host ip
   become: true
   become_user: root
@@ -62,20 +35,11 @@
     path: "{{ K8S_JOIN_COMMAND_FILE }}"
     regexp: '(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):6443'
     replace: "{{ groups['k8sM'][0] }}:6443"
-  when: inventory_hostname in groups['external']
 
 - set_fact: index="{{ lookup('ansible.utils.index_of', groups['k8sS'], 'regex', '{{ inventory_hostname }}') }}"
-
-# - name: Join as worker nodes w/ --control-plane arguments to the cluster
-#   become: true
-#   become_user: root
-#   command: "sh {{ K8S_JOIN_COMMAND_FILE | replace('join ', 'join --control-plane ' ) }}"
-#   ignore_errors: true
-#   when: index in ['0', '1']
 
 - name: Join as worker nodes w/o --control-plane arguments to the cluster
   become: true
   become_user: root
   command: "sh {{ K8S_JOIN_COMMAND_FILE }}"
   ignore_errors: true
-  # when: index not in ['0', '1']

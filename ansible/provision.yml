@@ -12,13 +12,6 @@
     become: true
     service: name=sshd state=restarted
 
-# - name: Prepare External
-#   hosts: all
-#   tags: ["base", "local-ssh"]
-#   gather_facts: true
-#   roles:
-#     - { role: base.external, become: true }
-
 - name: ZooKeeper
   hosts: all
   tags: ["zk"]

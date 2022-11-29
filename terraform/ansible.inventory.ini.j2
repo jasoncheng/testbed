@@ -1,7 +1,6 @@
 [${prefix}:children]
 namenode
 datanode
-external
 ceph
 ceph_adm
 ceph_osd
@@ -12,9 +11,6 @@ ceph_mon
 ${prefix}${index+1} ansible_host=${all[index]} hostname='${prefix}${index+1}' %{ if os == "centos" ~}ansible_python_interpreter=/usr/bin/python3%{ endif ~}
 
 %{ endfor ~}
-
-[external]%{for ip, str in other_servers}
-${split("|", str)[0]} ansible_host=${ip} ansible_ssh_user=${os} ansible_ssh_private_key_file=${split("|",str)[1]}%{ endfor }
 
 [namenode]
 ${prefix}1
