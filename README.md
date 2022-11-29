@@ -24,6 +24,7 @@
   - **[k8s-KEDA](https://keda.sh/)** A kubernetes based Event Driven AutoScaler
   - **[k8s-ingress-nginx](https://github.com/kubernetes/ingress-nginx)** A ingress controller for kubernetes using **[NGINX](https://www.nginx.com/)**
   - **[k8s-csi-ceph](https://github.com/ceph/ceph-csi)** ceph storag class for k8s
+  - **[k8s-rook-ceph](https://rook.io/)** provision/manage ceph cluster on k8s by using rook k8s operator
 
 <br /><br />
 
@@ -125,6 +126,12 @@ For update your local /etc/hosts, ``` -K  ```  is required
     $ ping pi1
 
   
+<br />
+
+## Ansible Playbook - k8s - Rook & Ceph - Cloud Native Storage Class for Kubernetes
+
+    $ ansible-playbook k8s-rook-ceph.yml
+
 <br />
 
 ## Ansible Playbook - Control remote k8s cluster from local
