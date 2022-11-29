@@ -1,0 +1,12 @@
+- name: Update local etc/hosts
+  become: true
+  ansible.builtin.lineinfile:
+    dest: "/etc/hosts"
+    regexp: "{{ item }}$"
+    line: "{{ hostvars[item].ansible_host }}   {{ item }}"
+    state: present
+  tags: ['base', 'etchosts']
+  delegate_to: localhost
+  with_items: "{{ groups['nodes'] }}"
+  when: inventory_hostname == groups['nodes'][0]
+

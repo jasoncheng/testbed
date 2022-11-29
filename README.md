@@ -83,9 +83,9 @@
 
 ## Ansible Playbook - Provision
 
-    $ ansible-playbook provision.yml [--tags TAG] -K
+    $ ansible-playbook provision.yml [--tags TAG]
 
-  ``` -K  ```  is only required for update your local /etc/hosts, if your provision w/ tag **base**
+  Note: don't forget add args [**-i inventory/pi.inv**] for all playbooks which depends on what inventory you want to use.
 
   | TAG | Description | Dependence |
   | --- | --- | --- |
@@ -107,13 +107,31 @@
   | stop[start]-ceph | stop or stop ceph | base, ceph |
 
 
-<br /><br />
+<br />
+
+## Ansible Playbook - config local enviornment
+
+For update your local /etc/hosts, ``` -K  ```  is required
+ 
+    $ ansible-playbook local-config.yml -K
+ 
+
+   SSH config can help you connect to server with simple hostname
+
+    $ ssh $YOUR_INVENTORY_HOSTNAME
+
+  ETC Hosts config can let you testing HTTP(s), without IP address
+
+    $ ping pi1
+
+  
+<br />
 
 ## Ansible Playbook - Control remote k8s cluster from local
 
     $ ansible-playbook k8s-local-kube-config.yml
 
-<br /><br />
+<br />
 
 ## Ansible Playbook - Test
 

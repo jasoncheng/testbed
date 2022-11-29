@@ -1,0 +1,13 @@
+---
+- name: Config local
+  hosts: nodes[0]
+  gather_facts: false
+  tasks:
+  - name: Inventory to ssh config
+    ansible.builtin.include_role:
+      name: base
+      tasks_from: ssh-local
+  - name: Inventory to etc hosts
+    ansible.builtin.include_role:
+      name: base
+      tasks_from: hosts-local

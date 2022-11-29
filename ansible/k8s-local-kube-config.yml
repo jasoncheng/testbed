@@ -3,43 +3,54 @@
 - name: Setup local kubectl w/ remote ~/.kube/config
   hosts: k8sM[0]
   gather_facts: false
+  become: true
   become_user: "{{ K8S_USER }}"
   vars:
-    kubeFolder: "~/.kube"
-    k8sConfigFile: '{{ kubeFolder }}/config'
+    kube_folder: "~/.kube"
+    k8s_config_file: '{{ kube_folder }}/config'
   tasks:
     - name: Create .kube directory
-      file:
-        path: "{{ kubeFolder }}"
+      ansible.builtin.file:
+        path: "{{ kube_folder }}"
         state: directory
+        mode: 0755
 
     - name: Download .kube/config
-      fetch: src="{{ k8sConfigFile  }}" dest="{{ k8sConfigFile }}" flat="yes" backup="true"
-    
-    - set_fact: localUser="{{ lookup('env', 'USER') }}"
+      ansible.builtin.fetch:
+        src: "{{ k8s_config_file }}"
+        dest: "{{ k8s_config_file }}"
+        flat: "yes"
+        backup: "true"
+
+    - name: Set local user var
+      ansible.builtin.set_fact:
+        local_user: "{{ lookup('env', 'USER') }}"
 
     - name: Comment out certificate-authority-data
-      become_user: "{{ localUser }}"
-      replace:
-        path: "{{ k8sConfigFile }}"
-        regexp: 'certificate-authority-data' 
+      become: true
+      become_user: "{{ local_user }}"
+      ansible.builtin.replace:
+        path: "{{ k8s_config_file }}"
+        regexp: 'certificate-authority-data'
         replace: '#certificate-authority-data'
         backup: true
       delegate_to: localhost
 
     - name: Replace server IP
-      become_user: "{{ localUser }}"
-      replace:
-        path: "{{ k8sConfigFile }}"
+      become: true
+      become_user: "{{ local_user }}"
+      ansible.builtin.replace:
+        path: "{{ k8s_config_file }}"
         regexp: 'https:\/\/.*:([0-9]+)'
         replace: 'https://{{ ansible_host }}:\1'
         backup: true
       delegate_to: localhost
 
     - name: Add insecure-skip-tls-verify true
-      become_user: "{{ localUser }}"
-      lineinfile:
-        path: "{{ k8sConfigFile }}"
+      become: true
+      become_user: "{{ local_user }}"
+      ansible.builtin.lineinfile:
+        path: "{{ k8s_config_file }}"
         insertafter: "server"
         regexp: "insecure-skip-tls-verify"
         line: "    insecure-skip-tls-verify: true"
@@ -47,9 +58,10 @@
       delegate_to: localhost
 
     - name: Add default namespace
-      become_user: "{{ localUser }}"
-      lineinfile:
-        path: "{{ k8sConfigFile }}"
+      become: true
+      become_user: "{{ local_user }}"
+      ansible.builtin.lineinfile:
+        path: "{{ k8s_config_file }}"
         insertafter: "server"
         regexp: "namespace"
         line: "    namespace: {{ K8S_DEFAULE_NAMESPACE }}"
@@ -57,23 +69,24 @@
       delegate_to: localhost
 
     - name: Test get nodes from remote k8sM
-      become_user: "{{ localUser }}"
-      shell: "kubectl get nodes"
+      become: true
+      become_user: "{{ local_user }}"
+      ansible.builtin.command: "kubectl get nodes"
       register: result
       delegate_to: localhost
+      changed_when: result.rc != 0
 
-    - debug: var=result.stdout_lines
+    - name: Touch .bashrc if not exists
+      ansible.builtin.file:
+        path: "~/.bashrc"
+        state: touch
+        mode: 0644
 
-    - name: commnad k8s-pods
-      become_user: "{{ localUser }}"
-      lineinfile:
+    - name: Commnad k8s-pods
+      become_user: "{{ local_user }}"
+      ansible.builtin.lineinfile:
         path: "~/.bashrc"
         insertafter: EOF
         regexp: "k8s-pods"
-        # line: "alias k8s-pods='kubectl get pod -o=custom-columns=NODE:.spec.nodeName,NAME:.metadata.name,IP:.metadata.ip --all-namespaces'"
         line: "alias k8s-pods='kubectl get pod -o wide -A'"
-      delegate_to: localhost
-    
-    - shell: "source ~/.bashrc"
-      become_user: "{{ localUser }}"
       delegate_to: localhost
