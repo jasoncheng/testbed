@@ -2,10 +2,10 @@
 ceph
 
 [nodes]
-pi1 ansible_host=10.33.27.182 hostname='pi1'
-pi2 ansible_host=10.33.27.173 hostname='pi2'
-pi3 ansible_host=10.33.27.191 hostname='pi3'
-pi4 ansible_host=10.33.27.137 hostname='pi4'
+pi1 ansible_host=10.33.27.182
+pi2 ansible_host=10.33.27.173
+pi3 ansible_host=10.33.27.191
+pi4 ansible_host=10.33.27.137
 
 [pi]
 pi[1:4]
