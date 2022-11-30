@@ -121,14 +121,11 @@ For update your local /etc/hosts, ``` -K  ```  is required
  
     $ ansible-playbook local-config.yml -K
  
+Then, enjoy 😍
 
-   SSH config can help you connect to server with simple hostname
+![SSH](https://user-images.githubusercontent.com/540463/204861081-862d9cbb-ef26-4558-9b15-a74c7f61e37b.png)
 
-    $ ssh $YOUR_INVENTORY_HOSTNAME
-
-  ETC Hosts config can let you testing HTTP(s), without IP address
-
-    $ ping pi1
+![EtcHosts](https://user-images.githubusercontent.com/540463/204861642-8c5edd1d-a6bc-4b84-8c76-f509cf2fd58a.png)
 
   
 <br />
@@ -142,6 +139,8 @@ For update your local /etc/hosts, ``` -K  ```  is required
 ## Ansible Playbook - Control remote k8s cluster from local
 
     $ ansible-playbook k8s-local-kube-config.yml
+
+![kubectl from local](https://user-images.githubusercontent.com/540463/204862291-834367a3-a783-4b36-9284-55a9627e23b8.png)
 
 <br />
 
