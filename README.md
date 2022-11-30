@@ -215,6 +215,8 @@ Then, enjoy 😍
 
   ![Prometheus](https://user-images.githubusercontent.com/540463/204858635-52b5c40e-49f5-4028-8527-e4c41b005ec4.png)
 
+  ### Video
+  
   [![Demo k8s pod auto scaling by using keda scaledobject](http://img.youtube.com/vi/piX1C9a-Ya0/0.jpg)](https://youtu.be/piX1C9a-Ya0 "click watch video")
 
 <br />
