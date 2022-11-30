@@ -30,8 +30,9 @@
   - **[k8s-csi-ceph](https://github.com/ceph/ceph-csi)** ceph storag class for k8s
   - **[k8s-rook-ceph](https://rook.io/)** provision/manage ceph cluster on k8s by using rook k8s operator
   - prometheus **[blackbox-exporter](https://github.com/prometheus/blackbox_exporter)** Probing of endpoint over HTTP, HTTPS, DNS, TCP, ICMP, gRPC
+  - **[Grafana/Loki](https://github.com/grafana/loki)** A horizontally-scalable, highly-available, multi-tenant log aggregation system.
 
-<br /><br />
+<br />
 
 ## File & Directory
 
@@ -41,7 +42,7 @@
   | terraform | For building testing server on AWS (ubuntu 20.04) |
   | test | python code for testing infrastructure |
 
-<br /><br />
+<br />
 
 ## AWS Infrastructure Setup
 
@@ -68,7 +69,7 @@
    | terraform/bd.pub | server pub key |
    | ansible/ansible.cfg | ansible config file |
 
-<br /><br />
+<br />
 
 ## On-Premise Setup
 
@@ -85,7 +86,7 @@
   | N/A | terraform/bd.pem | rename you public key for servers or update ansible.cfg
 
 
-<br /><br />
+<br />
 
 ## Ansible Playbook - Provision
 
@@ -181,7 +182,7 @@ Then, enjoy 😍
 
 ![Dashboard - Pi4 cluster](https://user-images.githubusercontent.com/540463/204858669-85950f67-9f90-4d2b-b3cd-79694a62f1a9.png)
 
-<br /><br />
+<br />
 
 ## Ansible Playbook - k8s - Monitoring & AutoScaling HPA and Keda library
 
@@ -197,7 +198,7 @@ Then, enjoy 😍
 
   | STEP | Task | Description |
   | --- | --- | --- |
-  | 1 | install.yml | helm install and config prometheus, granfa, keda, blackbox, [grafana blackbox exporter dashboard](https://grafana.com/grafana/dashboards/7587-prometheus-blackbox-exporter/) |
+  | 1 | install.yml | helm install and config prometheus, granfa, loki, keda, blackbox, [grafana blackbox exporter dashboard](https://grafana.com/grafana/dashboards/7587-prometheus-blackbox-exporter/) |
   | 2 | apply.yml | use my simple golang to build distroless docker image (**14.4MB**), this application not only listen http request but also provide prometheus /metrics w/ http_requests_total parameters |
   | 3 | apply.yml |deploy my app and [keda](https://keda.sh/) ScaledObject |
   | 4 | verify.yml | make sure scaleobject successful deploy |
@@ -213,6 +214,8 @@ Then, enjoy 😍
   ![BlackBox Exporter](https://user-images.githubusercontent.com/540463/204856792-7b42454d-a5d3-48ae-b4ec-4655125fc92f.png)
 
   ![Prometheus](https://user-images.githubusercontent.com/540463/204858635-52b5c40e-49f5-4028-8527-e4c41b005ec4.png)
+
+  [![Demo k8s pod auto scaling by using keda scaledobject](http://img.youtube.com/vi/piX1C9a-Ya0/0.jpg)](https://youtu.be/piX1C9a-Ya0 "click watch video")
 
 <br />
 
@@ -248,13 +251,13 @@ Then, enjoy 😍
 
   ![k8s CSI for Ceph](https://user-images.githubusercontent.com/540463/201524082-f4d10d43-ddfb-4787-a75d-55f485043af5.png)
 
-<br /><br />
+<br />
 
 ## Ansbile Playbook - Health check
 
     $ ansible-playbook health.yml
 
-<br /><br />
+<br />
 
 ## Add new node into k8s cluster
      
@@ -272,7 +275,7 @@ Then, enjoy 😍
      ! enable kubectl for remote control
      $ ansible-playbook k8s-local-kube-config.yml
 
-<br /><br />
+<br />
 
 ## Ansible AdHoc
 
@@ -280,7 +283,7 @@ Then, enjoy 😍
 
      $ ansible -m shell -a jps all 
 
-<br /><br />
+<br />
 
 ## Destroy Infrastructure on AWS
 
