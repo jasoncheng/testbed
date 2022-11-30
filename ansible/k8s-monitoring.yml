@@ -1,11 +1,10 @@
 ---
 
-- ansible.builtin.import_playbook: env.yml
+- name: Set env
+  ansible.builtin.import_playbook: env.yml
 
 - name: Monitoring
   hosts: nodes[0]
   gather_facts: no
-  # vars_files:
-  # - vars/all.yml
   roles:
   - { role: k8s.monitoring }

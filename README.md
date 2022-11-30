@@ -4,9 +4,13 @@
 
 ## Head First
 
-  For practice, big data / infrastructure as code / Kubernetes / python skill / dockerized / ansible...
+  For practice, for share, big data / infrastructure as code / Kubernetes / python skill / dockerized / ansible...
+
   My work env is **MacOS**, and server default is provision in **ubuntu 22.04** system, 
-  If you try to run in different enviornment, such as RHEL based os, you should modify ansible to suit your requirements.
+
+  If you try to run in different enviornment, such as RHEL based os, you should modify ansible to suit your requirements
+  
+  **BTW**, i'm working on *Pi4 x 5 pcs w/ CentOS7*.
 
 ## My Targets
 
@@ -25,6 +29,7 @@
   - **[k8s-ingress-nginx](https://github.com/kubernetes/ingress-nginx)** A ingress controller for kubernetes using **[NGINX](https://www.nginx.com/)**
   - **[k8s-csi-ceph](https://github.com/ceph/ceph-csi)** ceph storag class for k8s
   - **[k8s-rook-ceph](https://rook.io/)** provision/manage ceph cluster on k8s by using rook k8s operator
+  - prometheus **[blackbox-exporter](https://github.com/prometheus/blackbox_exporter)** Probing of endpoint over HTTP, HTTPS, DNS, TCP, ICMP, gRPC
 
 <br /><br />
 
@@ -173,9 +178,13 @@ For update your local /etc/hosts, ``` -K  ```  is required
   | start | start dashboard | base, k8s |
   | end | stop dashboard | base, k8s |
 
+![Dashboard - login w/ kube config](https://user-images.githubusercontent.com/540463/204858729-d4280fc4-b9d4-429e-a0eb-66ca3af6a35e.png)
+
+![Dashboard - Pi4 cluster](https://user-images.githubusercontent.com/540463/204858669-85950f67-9f90-4d2b-b3cd-79694a62f1a9.png)
+
 <br /><br />
 
-## Ansible Playbook - k8s - Monitoring & AutoScaling - HPA and Keda library
+## Ansible Playbook - k8s - Monitoring & AutoScaling HPA and Keda library
 
   ### Prerequisite
 
@@ -189,16 +198,24 @@ For update your local /etc/hosts, ``` -K  ```  is required
 
   | STEP | Task | Description |
   | --- | --- | --- |
-  | 1 | install.yml | helm install prometheus, granfa, [keda](https://keda.sh/), and do configuration |
+  | 1 | install.yml | helm install and config prometheus, granfa, keda, blackbox, [grafana blackbox exporter dashboard](https://grafana.com/grafana/dashboards/7587-prometheus-blackbox-exporter/) |
   | 2 | apply.yml | use my simple golang to build distroless docker image (**14.4MB**), this application not only listen http request but also provide prometheus /metrics w/ http_requests_total parameters |
   | 3 | apply.yml |deploy my app and [keda](https://keda.sh/) ScaledObject |
   | 4 | verify.yml | make sure scaleobject successful deploy |
   | 5 | test.yml| use [hey](https://github.com/rakyll/hey) command to request /metrics on **http-request-total.default.svc.cluster.local**, **prometheus-stack-kube-prom-prometheus.prometheus-stack** will collection metrics, and [keda](https://keda.sh/) scaledobject will dectect **sum(rate(http_requests_total[10s]))** from prometheus amd do her jobs , then ansible verify if my app ScaleIn and ScaleOut in the right way. |
   | 6 | output.yml | print services uri |
 
+  ### Run
+
     $ ansible-playbook k8s-monitoring.yml
 
-<br /><br />
+  Note: [Config](https://github.com/jasoncheng/testbed/issues/12) more URLs to monitoring
+
+  ![BlackBox Exporter](https://user-images.githubusercontent.com/540463/204856792-7b42454d-a5d3-48ae-b4ec-4655125fc92f.png)
+
+  ![Prometheus](https://user-images.githubusercontent.com/540463/204858635-52b5c40e-49f5-4028-8527-e4c41b005ec4.png)
+
+<br />
 
 ## Ansible Playbook - k8s Container Storage Interface(CSI) for Ceph
 

@@ -1,0 +1,5 @@
+SCRAPE_URLS: [
+  'https://gooole.com',
+  'https://www.amazon.com/',
+  'https://twitter.com'
+]

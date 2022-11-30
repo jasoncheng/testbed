@@ -1,4 +1,5 @@
-- debug:
+- name: Info
+  ansible.builtin.debug:
     msg:
     - "Grafana URL http://{{ DOMAINS['grafana'] }}:{{ nodeport }}/, user/password admin/{{ grafana_password }}"
     - "Prometheus URL http://{{ DOMAINS['prometheus'] }}:{{ nodeport }}/"

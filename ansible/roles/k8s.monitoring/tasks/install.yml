@@ -1,133 +1,19 @@
-- name: Install hey module for stress testing
-  become: true
-  ansible.builtin.package:
-    state: present
-    name: "{{ packages }}"
-  vars:
-    packages:
-      - hey
-      - kubernetes
-  ignore_errors: true
-  register: heyStat
-  when: not is_pi4 or not is_cent_os or os_version is not regex('^7.')
+- name: Prometheus
+  include_role:
+    name: k8s.monitoring
+    tasks_from: install_prometheus
 
-# - name: Install hey binary
-#   ansible.builtin.shell: |
-#     # wget https://hey-release.s3.us-east-2.amazonaws.com/hey_linux_amd64
-#     # chmod a+x hey_linux_amd64
-#     curl https://hey-release.s3.us-east-2.amazonaws.com/hey_linux_amd64 --output /usr/local/bin/hey
-#     chmod a+x /usr/local/bin/hey
-#     # mv hey_linux_amd64 /usr/local/bin/hey
-#   when: heyStat.rc != 0
+- name: Loki
+  include_role:
+    name: k8s.monitoring
+    tasks_from: install_loki
 
-- name: Install pip package
-  ansible.builtin.pip:
-    name: "{{ item }}"
-  with_items:
-  - "kubernetes"
-  - "docker"
+- name: Keda
+  include_role:
+    name: k8s.monitoring
+    tasks_from: install_keda
 
-- name: Add repo of Prometheus and Grafana
-  ansible.builtin.shell: |
-    helm repo add prometheus-community {{ chart_prometheus }}
-    helm repo update
-    # helm upgrade -i prometheus prometheus-community/prometheus -n {{ prometheus_namespace }}
-  # kubernetes.core.helm_repository:
-  #   name: prometheus-community
-  #   repo_url: "{{ chart_prometheus }}"
-
-- name: Add repo of Keda
-  ansible.builtin.shell: |
-    helm repo add kedacore {{ chart_keda }}
-    helm repo update
-    # helm upgrade -i keda kedacore/keda
-  register: result
-  changed_when: result.rc != 0
-  # kubernetes.core.helm_repository:
-  #   name: kedacore
-  #   repo_url: "{{ chart_keda }}"
-
-- name: Set prometheus file
-  ansible.builtin.set_fact:
-    value_file: "prometheus-values-{{ prometheus_stack_version }}.yaml"
-
-- name: Upload file
-  ansible.builtin.copy:
-    src: "{{ playbook_dir }}/roles/{{ role_name }}/files/{{ value_file }}"
-    dest: "/tmp/{{ value_file }}"
-
-- name: Setup grafana password
-  ansible.builtin.lineinfile:
-    regexp: "  adminPassword"
-    line: "  adminPassword: {{ grafana_password }}"
-    path: "/tmp/{{ value_file }}"
-
-# - name: Install Prometheus and Grafana w/ predefined scrape config
-#   kubernetes.core.helm:
-#     name: prometheus-stack
-#     chart_ref: prometheus-community/kube-prometheus-stack
-#     release_namespace: prometheus-stack
-#     create_namespace: true
-#     update_repo_cache: true
-#     values_files:
-#     - "/tmp/base.yml"
-#     # values:
-#     #   prometheus.path: "/prom"
-#     #   grafana.path: "/grafana"
-#   register: result
-
-- name: "Create namespace {{ prometheus_namespace }}"
-  kubernetes.core.k8s:
-    name: "{{ prometheus_namespace }}"
-    state: present
-    kind: Namespace
-    api_version: v1
-  # ansible.builtin.shell: "kubectl create ns {{ prometheus_namespace }}"
-  # ignore_errors: true
-
-# - name: Iptables for allow ALL
-#   become: true
-#   become_user: root
-#   shell: |
-#     iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X
-
-# - name: Check resource dir if exists
-#   ansible.builtin.stat:
-#     path: "{{ tmpDir }}"  
-#   register: dirStat
-
-# - name: Delete previous apply resources
-#   ansible.builtin.shell: |
-#     kubectl delete -f {{ tmpDir }}
-#   when: dirStat.stat.exists
-#   ignore_errors: true
-
-- name: Remove hook
-  ansible.builtin.shell: |
-    kubectl delete -A ValidatingWebhookConfiguration prometheus-stack-kube-prom-admission || true
-
-# - name: TODO - remove scaledobject
-#   ansible.builtin.shell: "kubectl delete scaledobject/http-request-total-scaledobject -n {{ K8S_DEFAULE_NAMESPACE }} || true"
-
-# - name: Install Keda
-#   ansible.builtin.shell: |
-#     helm uninstall keda -n keda
-#   ignore_errors: true
-
-- name: Install Prometheus and Grafana w/ predefined scrape config
-  ansible.builtin.shell: |
-    helm upgrade --install -f /tmp/prometheus-values-{{ prometheus_stack_version }}.yaml prometheus-stack prometheus-community/kube-prometheus-stack \
-      -n {{ prometheus_namespace }} --version {{ prometheus_stack_version }} --create-namespace
-
-# - name: Install Keda
-#   kubernetes.core.helm:
-#     name: keda
-#     chart_ref: kedacore/keda
-#     release_namespace: keda
-#     create_namespace: true
-#     update_repo_cache: true
-#   register: result
-
-- name: Install Keda
-  ansible.builtin.shell: |
-    helm upgrade --install keda kedacore/keda --namespace keda --create-namespace
+- name: Blackbox
+  include_role:
+    name: k8s.monitoring
+    tasks_from: install_blackbox

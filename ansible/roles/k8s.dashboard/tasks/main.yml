@@ -1,5 +1,8 @@
 ---
-- set_fact: ns="kubernetes-dashboard" dir="~/k8s-dashboard" adminUsername="admin" urlPath="/dashboard"
+- name: Set var
+  ansible.builtin.set_fact:
+    ns: "kubernetes-dashboard"
+    dir: "~/k8s-dashboard" 
 
 - name: Install dashboard
   shell: "kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.6.1/aio/deploy/recommended.yaml"
@@ -31,10 +34,10 @@
   - "ingress.yml"
   when: "'stop' not in ansible_run_tags"
 
-- name: Ingress-nginx NodePort
-  shell: "kubectl get svc --no-headers -n ingress-nginx ingress-nginx-controller -o custom-columns=PORT:spec.ports[1].nodePort"
-  register: nodeport
-  when: "'stop' not in ansible_run_tags"
+# - name: Ingress-nginx NodePort
+#   shell: "kubectl get svc --no-headers -n ingress-nginx ingress-nginx-controller -o custom-columns=PORT:spec.ports[1].nodePort"
+#   register: nodeport
+#   when: "'stop' not in ansible_run_tags"
 
 - name: Start dashboard
   shell: "kubectl scale deploy kubernetes-dashboard -n {{ ns }} --replicas=1"
@@ -45,17 +48,17 @@
   when: "'stop' in ansible_run_tags"
   ignore_errors: true
 
-- name: Get {{ adminUsername }} token
-  shell: "kubectl get secret/{{ adminUsername }} -n kubernetes-dashboard  -o jsonpath=\"{.data.token}\" | base64 --decode"
-  register: token
-  when: "'stop' not in ansible_run_tags"
+# - name: Get {{ adminUsername }} token
+#   shell: "kubectl get secret/{{ adminUsername }} -n kubernetes-dashboard  -o jsonpath=\"{.data.token}\" | base64 --decode"
+#   register: token
+#   when: "'stop' not in ansible_run_tags"
 
-- name: Print dashboard url and token info
-  debug:
-    msg: "{{ item }}"
-  with_items:
-  - "Login Url: https://{{ hostvars[inventory_hostname]['ansible_host'] }}:{{ nodeport.stdout }}{{ urlPath }}"
-  - "Admin Token:"
-  - "{{ token.stdout }}"
-  when: "'stop' not in ansible_run_tags"
+# - name: Print dashboard url and token info
+#   debug:
+#     msg: "{{ item }}"
+#   with_items:
+#   - "Login Url: https://{{ hostvars[inventory_hostname]['ansible_host'] }}:{{ nodeport.stdout }}{{ urlPath }}"
+#   - "Admin Token:"
+#   - "{{ token.stdout }}"
+#   when: "'stop' not in ansible_run_tags"
 

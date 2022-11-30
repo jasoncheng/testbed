@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ServiceAccount
 automountServiceAccountToken: false
 metadata:
-  name: {{ adminUsername }}
+  name: {{ k8s_user }}
   namespace: {{ ns }}
   labels:
     kubernetes.io/cluster-service: "true"

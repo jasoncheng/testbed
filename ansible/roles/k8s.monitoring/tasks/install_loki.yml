@@ -1,0 +1,12 @@
+- name: Add repo
+  kubernetes.core.helm_repository:
+    name: grafana
+    repo_url: https://grafana.github.io/helm-charts
+
+- name: Deploy loki
+  kubernetes.core.helm:
+    create_namespace: true
+    release_namespace: loki
+    chart_ref: grafana/loki-stack
+    update_repo_cache: true
+    release_name: loki

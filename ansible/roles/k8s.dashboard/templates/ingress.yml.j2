@@ -9,15 +9,15 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
     nginx.ingress.kubernetes.io/configuration-snippet: |
       proxy_set_header Accept-Encoding "";
-      sub_filter '<base href="/">' '<base href="{{ urlPath }}/">';
       sub_filter_once on;
   namespace: {{ ns }}
 spec:
   ingressClassName: nginx
   rules:
-  - http:
+  - host: {{ DOMAINS['k8sDashboard'] }}
+    http:
       paths:
-      - path: {{ urlPath }}(/|$)(.*)
+      - path: /(|$)(.*)
         pathType: Prefix
         backend:
           service:

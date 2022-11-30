@@ -1,5 +1,7 @@
 ---
-# Setup local machine can control k8s cluster through kubectl
+- name: Set env
+  ansible.builtin.import_playbook: env.yml
+
 - name: Setup local kubectl w/ remote ~/.kube/config
   hosts: k8sM[0]
   gather_facts: false
@@ -9,6 +11,7 @@
     kube_folder: "~/.kube"
     k8s_config_file: '{{ kube_folder }}/config'
   tasks:
+
     - name: Create .kube directory
       ansible.builtin.file:
         path: "{{ kube_folder }}"
@@ -20,7 +23,6 @@
         src: "{{ k8s_config_file }}"
         dest: "{{ k8s_config_file }}"
         flat: "yes"
-        backup: "true"
 
     - name: Set local user var
       ansible.builtin.set_fact:
@@ -33,7 +35,6 @@
         path: "{{ k8s_config_file }}"
         regexp: 'certificate-authority-data'
         replace: '#certificate-authority-data'
-        backup: true
       delegate_to: localhost
 
     - name: Replace server IP
@@ -43,7 +44,6 @@
         path: "{{ k8s_config_file }}"
         regexp: 'https:\/\/.*:([0-9]+)'
         replace: 'https://{{ ansible_host }}:\1'
-        backup: true
       delegate_to: localhost
 
     - name: Add insecure-skip-tls-verify true
@@ -54,7 +54,6 @@
         insertafter: "server"
         regexp: "insecure-skip-tls-verify"
         line: "    insecure-skip-tls-verify: true"
-        backup: true
       delegate_to: localhost
 
     - name: Add default namespace
@@ -65,7 +64,21 @@
         insertafter: "server"
         regexp: "namespace"
         line: "    namespace: {{ K8S_DEFAULE_NAMESPACE }}"
-        backup: true
+      delegate_to: localhost
+
+    - name: Get k8s user token
+      ansible.builtin.include_role:
+        name: k8s.dashboard
+        tasks_from: user-token
+
+    - name: Add admin token
+      become: true
+      become_user: "{{ local_user }}"
+      ansible.builtin.lineinfile:
+        path: "{{ k8s_config_file }}"
+        insertafter: "client-certificate-data"
+        regexp: "    token"
+        line: "    token: {{ k8s_user_token }}"
       delegate_to: localhost
 
     - name: Test get nodes from remote k8sM
@@ -76,17 +89,17 @@
       delegate_to: localhost
       changed_when: result.rc != 0
 
-    - name: Touch .bashrc if not exists
-      ansible.builtin.file:
-        path: "~/.bashrc"
-        state: touch
-        mode: 0644
+    # - name: Touch .bashrc if not exists
+    #   ansible.builtin.file:
+    #     path: "~/.bashrc"
+    #     state: touch
+    #     mode: 0644
 
-    - name: Commnad k8s-pods
-      become_user: "{{ local_user }}"
-      ansible.builtin.lineinfile:
-        path: "~/.bashrc"
-        insertafter: EOF
-        regexp: "k8s-pods"
-        line: "alias k8s-pods='kubectl get pod -o wide -A'"
-      delegate_to: localhost
+    # - name: Commnad k8s-pods
+    #   become_user: "{{ local_user }}"
+    #   ansible.builtin.lineinfile:
+    #     path: "~/.bashrc"
+    #     insertafter: EOF
+    #     regexp: "k8s-pods"
+    #     line: "alias k8s-pods='kubectl get pod -o wide -A'"
+    #   delegate_to: localhost

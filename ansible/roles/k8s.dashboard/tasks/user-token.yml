@@ -1,0 +1,22 @@
+- name: Get token
+  ansible.builtin.shell: "kubectl get secret/{{ k8s_user }} -n kubernetes-dashboard  -o jsonpath=\"{.data.token}\" | base64 --decode"
+  register: token
+  when: "'stop' not in ansible_run_tags"
+
+- name: Ingress-nginx NodePort
+  ansible.builtin.shell: "kubectl get svc --no-headers -n ingress-nginx ingress-nginx-controller -o custom-columns=PORT:spec.ports[1].nodePort"
+  register: nodeport
+  when: "'stop' not in ansible_run_tags"
+
+# - name: Print dashboard url and token info
+#   ansible.builtin.debug:
+#     msg: "{{ item }}"
+#   with_items:
+#   - "Login Url: https://{{ hostvars[inventory_hostname]['ansible_host'] }}:{{ nodeport.stdout }}{{ DOMAINS['k8sDashboard'] }}"
+#   - "Admin Token:"
+#   - "{{ token.stdout }}"
+#   when: "'stop' not in ansible_run_tags"
+
+- name: Set k8sToken
+  ansible.builtin.set_fact:
+    k8s_user_token: "{{ token.stdout }}"
