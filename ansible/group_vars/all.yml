@@ -6,3 +6,12 @@ DOMAINS:
     "ceph": "ceph",
     "httpreq": "httpreq",
   }
+ENV_FILE_SOURCE: '/etc/profile'
+K8S_JOIN_COMMAND_FILE: '/tmp/k8s_join_command'
+K8S_DEFAULE_NAMESPACE: 'default'
+K8S_USER: 'ubuntu'
+OS_USER: 'ubuntu'
+# please don't do the evil w/ my demo account for newbie
+DOCKER_REGISTRY: 'jasoncheng'
+DOCKER_USER: 'jasoncheng'
+DOCKER_PASS: 'dckr_pat_rfPcLh1ogXsajGfe8Es8trWUuis'

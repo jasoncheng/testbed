@@ -4,7 +4,7 @@
   ansible.builtin.import_playbook: env.yml
 
 - name: Monitoring
-  hosts: nodes[0]
+  hosts: k8sM
   gather_facts: no
   roles:
   - { role: k8s.monitoring }

@@ -7,11 +7,14 @@
   failed_when: result.stdout != "1"
 
 - name: "Stress Test"
-  shell: "hey -n 90000 -m GET http://{{ RESOURCE_PREFIX }}{{ groups['nodes'] | length }}:{{ nodeport }}/metrics"
-  # shell: |
-  #   docker pull williamyeh/hey
-  #   docker run --rm  williamyeh/hey -n 90000 -c 100 http://{{ RESOURCE_PREFIX }}{{ groups['nodes'] | length }}:{{ nodeport }}/metrics
+  shell: "hey -n 90000 -m GET http://{{ DOMAINS['httpreq'] }}/metrics"
   register: result
+  when: not is_centos7_pi
+
+- name: "Stress Test CentOS7 on Pi"
+  shell: "ab -n 90000 -c 100 http://{{ DOMAINS['httpreq'] }}/metrics"
+  register: result
+  when: is_centos7_pi
 
 - debug: msg="{{ result.stdout_lines }}"
 

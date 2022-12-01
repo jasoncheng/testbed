@@ -1,26 +1,31 @@
+[nodes]
+pi0 ansible_host=10.33.27.182 ansible_ssh_user=root
+pi1 ansible_host=10.33.27.183 ansible_ssh_user=root
+pi2 ansible_host=10.33.27.137 ansible_ssh_user=root
+pi3 ansible_host=10.33.27.191 ansible_ssh_user=root
+pi4 ansible_host=10.33.27.128 ansible_ssh_user=root
+pi5 ansible_host=10.33.27.173 ansible_ssh_user=root
+
 [pi:children]
 ceph
 
-[nodes]
-pi1 ansible_host=10.33.27.182
-pi2 ansible_host=10.33.27.173
-pi3 ansible_host=10.33.27.191
-pi4 ansible_host=10.33.27.137
-
 [pi]
-pi[1:4]
+pi[0:5]
 
 [pi:vars]
 ansible_python_interpreter=/usr/bin/python3
 
 [k8s]
-pi[1:4]
+pi[1:5]
+
+[k8s:vars]
+ansible_python_interpreter=/usr/bin/python3
 
 [k8sM]
 pi1
 
 [k8sS]
-pi[2:4]
+pi[2:5]
 
 [ceph]
 pi1

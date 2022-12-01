@@ -1,10 +1,6 @@
-# - debug: var="{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}"
-
-# - debug: var=hostvars[inventory_hostname]['ansible_host']
-
-- name: update etc/hosts
+- name: Update etc/hosts
   tags: ['base']
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: "/etc/hosts"
     regexp: "\t{{ item }}$"
     line: "{{ hostvars[item]['ansible_host'] }}\t{{ item }}"
@@ -13,7 +9,7 @@
   ignore_errors: true
   with_items: "{{ groups['all'] }}"
 
-- name: apt install
+- name: Apt install
   apt:
     name: "{{ packages }}"
     state: present
@@ -23,14 +19,14 @@
   when: inventory_hostname not in groups['nodes']
 
 - name: touch env file
-  file:
+  ansible.builtin.file:
     mode: 0755
     path: "{{ ENV_FILE_SOURCE }}"
     state: touch
   when: inventory_hostname not in groups['nodes']
 
-- name: "Set {{ ENV_FILE_SOURCE }} "
-  blockinfile:
+- name: Set {{ ENV_FILE_SOURCE }}
+  ansible.builtin.blockinfile:
     insertafter: EOF
     dest: "{{ ENV_FILE_SOURCE }}"
     block: |
@@ -55,8 +51,8 @@
     name: base
     tasks_from: ssh-local.yml
 
-- name: add  {{ K8S_USER }}  to docker group
-  user:
+- name: Add { K8S_USER }} to docker group
+  ansible.builtin.user:
     name: "{{ K8S_USER }}"
     groups: ["docker"]
     append: yes

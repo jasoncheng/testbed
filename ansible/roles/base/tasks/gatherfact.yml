@@ -1,6 +1,6 @@
 - name: Check if require gather fact
-  setup:
+  ansible.builtin.setup:
   delegate_facts: true
   delegate_to: "{{ item }}"
-  with_items: "{{ fetch_hosts }}"
+  with_items: "{{ groups['nodes'] }}"
   when: fetch_hosts is defined

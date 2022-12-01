@@ -1,6 +1,5 @@
 - name: Deploy blackbox
   kubernetes.core.helm:
-    name: blackbox
     create_namespace: true
     release_namespace: blackbox
     chart_ref: prometheus-community/prometheus-blackbox-exporter

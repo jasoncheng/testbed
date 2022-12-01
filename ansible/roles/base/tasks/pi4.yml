@@ -1,4 +1,27 @@
-- name: expand disk space
+- name: Expand disk space
   ansible.builtin.shell: rootfs-expand 
   no_log: true
   failed_when: false
+  register: result
+  changed_when: result.rc != 1
+
+- name: Install package for CentOS7 w/ Pi4
+  package: name="{{ item }}" state=latest
+  with_items:
+  - htop
+  - iftop
+  - vim
+  - gcc
+  - python-cffi
+  - python-lxml
+  - libxml2
+  - httpd-tools
+
+- name: Pip3 packages for pi4 only
+  ansible.builtin.pip:
+    state: latest
+    name:
+    - requests
+    - pyyaml
+    - docker==4.4.4
+  ignore_errors: true

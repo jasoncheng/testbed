@@ -1,8 +1,8 @@
-- name: if pi4 do something...
+- name: If pi4 do something...
   include_role:
     name: base
     tasks_from: pi4
-  when: is_pi4
+  when: is_centos7_pi
 
 - name: Upgrade all package
   include_role:
@@ -10,7 +10,9 @@
     tasks_from: pkg-upgrade
 
 - name: Install package
-  package: name="{{ item }}" state=latest
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: latest
   with_items:
   - python3
   - python3-pip
@@ -19,12 +21,10 @@
   - tree
   - curl
   - acl
-  # args:
-  #   executable: /usr/bin/python
   ignore_errors: true
 
 - name: Install package ubuntu only
-  package: name="{{ item }}" state=latest
+  ansible.builtin.package: name="{{ item }}" state=latest
   with_items:
   - snapd
   - openjdk-11-jdk
@@ -33,7 +33,7 @@
   when: is_ubuntu_os
 
 - name: Install package CentOS only
-  package: name="{{ item }}" state=latest
+  ansible.builtin.package: name="{{ item }}" state=latest
   with_items:
   - libxslt-devel
   - libxml2-devel
@@ -41,15 +41,15 @@
   - epel-release
   when: is_cent_os
 
-- name: pip3 packages
+- name: Pip3 package install exclude pi w/ centos7
   ansible.builtin.pip:
     state: latest
     name:
-    - lxml
     - ssh_config
     - stormssh
     - snap
-  ignore_errors: true
+    - lxml
+  when: not is_centos7_pi
 
 - name: Hostname
   tags: ["base", "always"]
@@ -58,13 +58,13 @@
     tasks_from: hosts.yml
 
 - name: Touch env file
-  file:
+  ansible.builtin.file:
     mode: 0755
     path: "{{ ENV_FILE_SOURCE }}"
     state: touch
 
 - name: Set {{ ENV_FILE_SOURCE }} for all user
-  blockinfile:
+  ansible.builtin.blockinfile:
     insertafter: EOF
     dest: "{{ ENV_FILE_SOURCE }}"
     block: |
@@ -103,19 +103,20 @@
     tasks_from: ssh-local.yml
 
 - name: Add docker group
-  group:
+  ansible.builtin.group:
     name: "docker"
     state: present
 
-- name: "add ubuntu to docker group"
-  user:
+- name: Add ubuntu to docker group
+  ansible.builtin.user:
     name: "ubuntu"
     groups: ["docker"]
     append: yes
   ignore_errors: true
+  when: OS_USER == "ubuntu"
 
-- name: add  {{ K8S_USER }}  to docker group
-  user:
+- name: Add  {{ K8S_USER }}  to docker group
+  ansible.builtin.user:
     name: "{{ K8S_USER }}"
     groups: ["docker"]
     append: yes
@@ -128,5 +129,5 @@
     tasks_from: reboot.yml
 
 - name: Set timezone
-  timezone:
+  ansible.builtin.timezone:
     name: "Asia/Taipei"

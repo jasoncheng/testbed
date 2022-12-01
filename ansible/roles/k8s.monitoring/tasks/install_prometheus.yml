@@ -21,6 +21,18 @@
           alertManager: true
       alertmanager:
         enabled: true
+        config:
+          global:
+            smtp_smarthost: 'localhost:25'
+            smtp_from: 'alertmanager@example.com'
+            smtp_require_tls: false
+          route:
+            group_by: ['namespace', 'instance', 'severity']
+            receiver: 'jason'
+          receivers:
+          - name: 'jason'
+            email_configs:
+            - to: '17hado.com@gmail.com'
       grafana:
         adminPassword: "{{ grafana_password }}"
       prometheus:
@@ -44,3 +56,14 @@
               target_label: instance
             - target_label: __address__
               replacement: blackbox-prometheus-blackbox-exporter.blackbox:9115
+        additionalPrometheusRulesMap:
+          uptime:
+            rules:
+            - alert: EndPointDown
+              expr: probe_success == 0
+              for: 30s
+              lables:
+                severity: "critical"
+              annotations:
+                summary: "Endpoint {{ '{{' }} $lables.instance {{ '}}' }} down"
+        
