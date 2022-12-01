@@ -11,6 +11,7 @@ K8S_JOIN_COMMAND_FILE: '/tmp/k8s_join_command'
 K8S_DEFAULE_NAMESPACE: 'default'
 K8S_USER: 'ubuntu'
 OS_USER: 'ubuntu'
+
 # please don't do the evil w/ my demo account for newbie
 DOCKER_REGISTRY: 'jasoncheng'
 DOCKER_USER: 'jasoncheng'
