@@ -1,0 +1,42 @@
+- name: HAProxy - Install package
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - haproxy
+    - keepalived
+    - psmisc
+
+- name: Gather facter
+  vars:
+    fetch_hosts: true
+  include_role:
+    name: base
+    tasks_from: gatherfact
+
+- name: HAProxy - Configure
+  ansible.builtin.template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    lstrip_blocks: true
+    mode: 0700
+
+- name: HAProxy - Start
+  ansible.builtin.systemd:
+    name: haproxy
+    enabled: true
+    state: restarted
+    daemon_reload: true
+
+- name: KeepAlived - Configure
+  ansible.builtin.template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+    lstrip_blocks: true
+
+- name: KeepAlived - Start
+  ansible.builtin.systemd:
+    name: keepalived
+    enabled: true
+    state: restarted
+    daemon_reload: true

@@ -1,0 +1,6 @@
+---
+- name: Provision HA
+  hosts: HA
+  gather_facts: false
+  roles:
+  - { role: ha }

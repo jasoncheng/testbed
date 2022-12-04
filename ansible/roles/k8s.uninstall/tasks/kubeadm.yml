@@ -1,0 +1,6 @@
+- name: Kubeadm reset
+  ansible.builtin.command: kubeadm reset --force
+  failed_when: false
+  changed_when: result.rc == 0
+  register: result
+  tags: ['kubeadm']

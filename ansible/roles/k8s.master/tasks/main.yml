@@ -1,30 +1,19 @@
-- set_fact: cidrblock="10.244.0.0/16" k8sConfigFile='~/.kube/config'
-
-- name: Reset Kubernetes component
-  become: true
-  become_user: root
-  ansible.builtin.shell: "kubeadm reset --force"
-  register: reset_cluster
-  ignore_errors: true
-
-- name: Delete .kube folder
-  become: true
-  ansible.builtin.file:
-    state: absent
-    path: "{{ item.path }}"
-  with_items:
-  - { "owner": "root", "path": "/root/.kube/config" }
-  - { "owner": "{{ K8S_USER }}", "path": "$HOME/.kube/config" }
+- name: Debug info
+  ansible.builtin.debug:
+    msg: "{{ extra_init_args }}"
 
 - name: Initialize cluster
   become: true
   become_user: root
-  ansible.builtin.shell: "kubeadm init --pod-network-cidr={{ cidrblock }} --ignore-preflight-errors=cri"
-  ignore_errors: true
+  ansible.builtin.command: "kubeadm init --pod-network-cidr={{ K8S_CIDRBLOCK }} --ignore-preflight-errors=cri {{ extra_init_args }}"
   args:
     chdir: $HOME
     creates: cluster_initialized.txt
+  register: result
+  changed_when: result.rc == 0
+  failed_when: result.rc != 0 and result.stderr is defined and ('is in use' not in result.stderr or 'already exists' not in result.stderr)
 
+# TODO
 - name: Copy admin.conf to user's kube config
   become_user: root
   become: true
@@ -51,12 +40,26 @@
 - name: Get join token
   become_user: "{{ K8S_USER }}"
   ansible.builtin.shell: kubeadm token create --print-join-command
-  register: k8s_join_command
+  register: k8s_join_result
 
-# - debug: var=k8s_join_command.stdout
-  
-- name: check local user
-  ansible.builtin.set_fact: localUser="{{ lookup('env', 'USER') }}"
+- name: Get cert if necessary
+  ansible.builtin.shell: kubeadm init phase upload-certs --upload-certs | tail -1
+  when: enable_k8s_ha_mode
+  register: result
 
-- name: Save command to file in your pc
-  local_action: copy content="{{ k8s_join_command.stdout_lines[0] }}" dest="{{ K8S_JOIN_COMMAND_FILE }}" mode=0777
+- name: Set certificate-key 
+  ansible.builtin.set_fact:
+    cert_key: "{{ '' if result is not defined or result.stdout is not defined else '--certificate-key '+result.stdout}}"
+  when: enable_k8s_ha_mode
+
+- name: Check local user
+  ansible.builtin.set_fact:
+    localUser: "{{ lookup('env', 'USER') }}"
+    k8s_join_command: "{{ k8s_join_result.stdout_lines[0] }} {{ cert_key }}"
+
+- name: Save command to file in your local
+  ansible.builtin.copy:
+    content: "{{ k8s_join_command }}"
+    dest: "{{ k8s_join_command_file }}"
+    mode: 0777
+  delegate_to: localhost

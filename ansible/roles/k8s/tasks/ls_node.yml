@@ -1,0 +1,7 @@
+  - name: Print
+    ansible.builtin.command: kubectl get no
+    register: result
+
+  - name: Print cluster info
+    ansible.builtin.debug:
+      msg: "{{ result.stdout_lines }}"

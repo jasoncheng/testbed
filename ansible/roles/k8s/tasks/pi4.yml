@@ -5,7 +5,7 @@
     enabled: no
 
 - name: Turn off selinux temporary
-  ansible.builtin.shell: setenforce 0
+  ansible.builtin.command: setenforce 0
   no_log: true
   failed_when: false
 
@@ -17,16 +17,16 @@
     backup: yes
 
 - name: Pi4 - cgroup read cmdline.txt
-  ansible.builtin.shell: cat /boot/cmdline.txt
+  ansible.builtin.command: cat /boot/cmdline.txt
   register: cmdline
 
 - name: Pi4 - cgroup split as list
-  set_fact:
+  ansible.builtin.set_fact:
     cmds: "{{ cmdline.stdout | split(' ') }}"
     cmds_filter: []
 
 - name: Pi4 - cgroup filter 
-  set_fact:
+  ansible.builtin.set_fact:
     cmds_filter: "{{ cmds_filter + [item] }}"
   with_items: "{{ cmds }}"
   when:
@@ -34,11 +34,11 @@
   # - "'cgroup_memory' not in item"
 
 - name: Pi4 - cgroup init var
-  set_fact:
+  ansible.builtin.set_fact:
     list_cmds: "{{ cmds_filter }}"
 
 - name: Pi4 - cgroup add into cmdline.txt
-  set_fact:
+  ansible.builtin.set_fact:
     list_cmds: "{{ list_cmds + [item] }}"
   with_items:
   - "cgroup_enable=memory"
@@ -46,10 +46,10 @@
   # - "cgroup_memory=1"
 
 - name: Pi4 - final pi cmdline.txt
-  set_fact: cmdline="{{ list_cmds | join(' ') }}"
+  ansible.builtin.set_fact: cmdline="{{ list_cmds | join(' ') }}"
 
 - name: Pi4 - debug
-  debug: msg="{{ cmdline }}"
+  ansible.builtin.debug: msg="{{ cmdline }}"
 
 - name: Pi4 - set cgroup
   ansible.builtin.lineinfile:
@@ -57,10 +57,12 @@
     regexp: '{{ list_cmds[0] }}'
     line: "{{ cmdline }}"
     mode: 0755
+  register: chg_cgroup
 
-- name: reboot
+- name: Reboot if Pi4 /boot/cmdline.txt changed
   ansible.builtin.reboot:
     msg: "Reboot initiated."
     reboot_timeout: 300
     connect_timeout: 5
     test_command: whoami
+  when: chg_cgroup.changed

@@ -1,45 +1,27 @@
-- set_fact: k8sConfigFile='~/.kube/config'
-
-- name: Leave legacy cluster
-  become: true
-  become_user: root
-  shell: "kubeadm reset --force"
-  ignore_errors: true
-  when: "'join_only' not in ansible_run_tags"
-
-- name: copy .kube/confg to slaver
-  become_user: "{{ item }}"
-  become: true
-  copy:
-    src: "{{ k8sConfigFile  }}"
-    dest: "{{ k8sConfigFile }}"
-    backup: true
-    owner: "{{ item }}"
-    mode: 0600
-  with_items:
-  - "root"
-  - "{{ K8S_USER }}"
-
 - name: Copy join command
   become: true
   become_user: root
-  copy:
-    src: "{{ K8S_JOIN_COMMAND_FILE }}"
-    dest: "{{ K8S_JOIN_COMMAND_FILE }}"
+  ansible.builtin.copy:
+    src: "{{ k8s_join_command_file }}"
+    dest: "{{ k8s_join_command_file }}"
     mode: 0777
 
-- name: Replace join host ip
+- name: Set var
+  ansible.builtin.set_fact:
+    cert_str: "{{ '' if not enable_k8s_ha_mode or inventory_hostname not in groups['k8sApis'] else '--control-plane' }}"
+
+- name: Set var
+  ansible.builtin.set_fact:
+    join_cmd: "{{ lookup('file', k8s_join_command_file) }} {{ cert_str }}"
+
+- name: Debug info
+  ansible.builtin.debug:
+    msg: "{{ join_cmd }}"
+
+- name: Worker nodes join cluster
   become: true
   become_user: root
-  replace:
-    path: "{{ K8S_JOIN_COMMAND_FILE }}"
-    regexp: '(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):6443'
-    replace: "{{ groups['k8sM'][0] }}:6443"
-
-- set_fact: index="{{ lookup('ansible.utils.index_of', groups['k8sS'], 'regex', '{{ inventory_hostname }}') }}"
-
-- name: Join as worker nodes w/o --control-plane arguments to the cluster
-  become: true
-  become_user: root
-  command: "sh {{ K8S_JOIN_COMMAND_FILE }}"
-  ignore_errors: true
+  ansible.builtin.command: "{{ join_cmd }}"
+  register: result
+  changed_when: result.rc == 0
+  failed_when: result.rc != 0 and result.stderr is defined and ('is in use' not in result.stderr or 'already exists' not in result.stderr)

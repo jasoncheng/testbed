@@ -1,0 +1,5 @@
+- name: Uninstall Kubernetes
+  gather_facts: false
+  hosts: k8s
+  roles:
+  - { role: k8s.uninstall }

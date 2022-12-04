@@ -1,0 +1,41 @@
+- name: Set variables
+  ansible.builtin.set_fact:
+    local_file: "/tmp/kube_config_for_nodes"
+
+- name: Download .kube/config
+  run_once: true
+  ansible.builtin.fetch:
+    src: "{{ k8s_config_file }}"
+    dest: "{{ local_file }}"
+    flat: "yes"
+    mode: 0700
+  when: inventory_hostname == groups['k8sM'][0]
+
+# - name: Comment out certificate-authority-data
+#   run_once: true
+#   ansible.builtin.replace:
+#     path: "{{ k8s_config_file }}"
+#     regexp: 'certificate-authority-data'
+#     replace: '#certificate-authority-data'
+#     delegate_to: localhost
+
+# - name: Replace server IP to hostname
+#   run_once: true
+#   ansible.builtin.replace:
+#     path: "{{ local_file }}"
+#     regexp: 'https:\/\/.*:6443'
+#     replace: 'https://{{ K8S_API_DOMAIN }}:{{ K8S_API_PORT }}'
+#     delegate_to: localhost
+
+- name: Copy .kube/confg to nodes
+  become_user: "{{ item }}"
+  become: true
+  ansible.builtin.copy:
+    src: "{{ local_file  }}"
+    dest: "{{ k8s_config_file }}"
+    owner: "{{ item }}"
+    mode: 0600
+  when: inventory_hostname not in groups['k8sM']
+  with_items:
+  - "root"
+  - "{{ K8S_USER }}"

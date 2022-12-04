@@ -17,12 +17,8 @@ KAFKA_UI_PORT: '30378'
 DATA_PATH: '/opt/data'
 DIR_DATA: '{{ DATA_PATH }}/dn'
 DIR_NAME: '{{ DATA_PATH }}/nn'
-# TEST_HBASE_SERVER: '{{ RESOURCE_PREFIX }}1'
-K8S_JOIN_COMMAND_FILE: '/tmp/k8s_join_command'
-# K8S_USER: 'kube'
 K8S_USER: 'ubuntu'
 OS_USER: 'ubuntu'
-# K8S_DEFAULE_NAMESPACE: "{{ lookup('env', 'USER') }}"
 K8S_DEFAULE_NAMESPACE: 'default'
 # 如果自裝zk, 使用false; 或者用true, hbase會負責跑zookeeper
 HBASE_MANAGES_ZK: 'false'

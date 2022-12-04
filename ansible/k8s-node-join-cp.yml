@@ -1,0 +1,85 @@
+---
+- name: Add Control Plane
+  hosts: k8sM[0]
+  gather_facts: false
+  vars_prompt:
+  - name: control_plane
+    prompt: What is your control-plane ?
+    default: "{{ groups['k8sM'][0] }}"
+    private: no
+  - name: node_to_join_cp
+    prompt: Which node you want to join cluster as control-plan ?
+    private: no
+  tasks:
+  - name: Set tmp file name
+    ansible.builtin.set_fact:
+      tmp_file: /tmp/cp.tar.gz
+      k8s_dir: /etc/kubernetes
+
+  - name: Tar Control Plane files
+    community.general.archive:
+      format: gz
+      force_archive: true
+      dest: "{{ tmp_file }}"
+      mode: 0700
+      path:
+        - "{{ k8s_dir }}/pki/ca*"
+        - "{{ k8s_dir }}/pki/sa*"
+        - "{{ k8s_dir }}/pki/front-proxy-ca*"
+        - "{{ k8s_dir }}/pki/etcd/ca*"
+        - "{{ k8s_dir }}/admin.conf"
+    delegate_to: "{{ control_plane }}"
+
+  - name: Download files from Control Plane
+    ansible.builtin.fetch:
+      src: "{{ tmp_file }}"
+      dest: "{{ tmp_file }}"
+      flat: true
+    delegate_to: "{{ control_plane }}"
+
+  - name: Copy file to new node
+    ansible.builtin.copy:
+      src: "{{ tmp_file }}"
+      dest: "{{ tmp_file }}"
+    delegate_to: "{{ node_to_join_cp }}"
+
+  - name: Unarchive to new node
+    ansible.builtin.unarchive:
+      src: "{{ tmp_file }}"
+      dest: "{{ k8s_dir }}"
+      mode: 0744
+    delegate_to: "{{ node_to_join_cp }}"
+
+  - name: Get token
+    ansible.builtin.command: kubeadm token create --print-join-command
+    register: cmd
+    delegate_to: "{{ control_plane }}"
+
+  - name: Enable kubelet
+    ansible.builtin.command: systemctl enable kubelet.service
+
+  - name: Set token
+    ansible.builtin.set_fact:
+      join_command: "{{ cmd.stdout }} --control-plane"
+
+  - name: Show join command
+    ansible.builtin.debug:
+      msg: "{{ join_command }}"
+
+  - name: Join
+    ansible.builtin.shell:
+      cmd: "{{ join_command }}"
+    delegate_to: "{{ node_to_join_cp }}"
+  
+  - name: Show nodes
+    ansible.builtin.include_role:
+      name: k8s
+      tasks_from: ls_node
+
+  # TODO: add kube config to all servers
+#kubectl -n kube-system edit cm kubeadm-config
+#kubectl -n kube-system edit cm kube-proxy
+#kubeadm config print init-defaults -o yaml
+#controlPlaneEndpoint: localhost:6443
+#kubeadm upgrade apply -y --config xxx.yaml
+#systemctl restart kubelet   

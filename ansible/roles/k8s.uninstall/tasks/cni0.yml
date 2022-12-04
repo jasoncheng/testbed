@@ -1,0 +1,9 @@
+- name: Interface cni0 down
+  ansible.builtin.command: ifconfig cni0 down
+  failed_when: false
+  tags: ['cni0']
+
+- name: Interfact cni0 delete
+  ansible.builtin.command: ip link delete cni0
+  failed_when: false
+  tags: ['cni0']

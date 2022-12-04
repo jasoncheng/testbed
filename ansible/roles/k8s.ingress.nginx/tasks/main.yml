@@ -1,0 +1,27 @@
+# Plz notice that to remove no schedule pods on control-plane (taint NoSchedule) could have security issue,
+# But for just have few nodes can use, and we won't setup any dns for our domain, 
+# we just random pick node as endpoint.
+# Refs: https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#control-plane-node-isolation
+
+- name: Run taint NoSchedule-, plz don't do it on production, could have security issue
+  ansible.builtin.command: "kubectl taint node {{ item }} node-role.kubernetes.io/control-plane:NoSchedule-"
+  # when: cluster_size | int <= 5
+  register: result
+  failed_when: result.rc != 0 and 'not found' not in result.stderr
+  changed_when: result.rc == 0
+  with_items: "{{ groups['k8sApis'] }}"
+
+- name: Ingress Nginx Install
+  ansible.builtin.command: |
+    helm upgrade --install ingress-nginx ingress-nginx \
+    --repo https://kubernetes.github.io/ingress-nginx \
+    --namespace ingress-nginx --create-namespace --set controller.hostNetwork=true,controller.kind=DaemonSet
+
+- name: Remove ValidatingWebhookConfiguration
+  ansible.builtin.command: kubectl delete -A ValidatingWebhookConfiguration ingress-nginx-admission
+  when: cluster_size | int > 2
+
+# - name: Warning message
+#   ansible.builtin.debug:
+#     msg: "k8s ingress nginx require at least 3 node on cluster, so we set taint none on your single node"
+#   when: cluster_size | int < 3

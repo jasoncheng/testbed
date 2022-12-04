@@ -7,11 +7,7 @@
   gather_facts: false
   become: true
   become_user: "{{ K8S_USER }}"
-  vars:
-    kube_folder: "~/.kube"
-    k8s_config_file: '{{ kube_folder }}/config'
   tasks:
-
     - name: Create .kube directory
       ansible.builtin.file:
         path: "{{ kube_folder }}"
@@ -29,33 +25,33 @@
       ansible.builtin.set_fact:
         local_user: "{{ lookup('env', 'USER') }}"
 
-    - name: Comment out certificate-authority-data
-      become: true
-      become_user: "{{ local_user }}"
-      ansible.builtin.replace:
-        path: "{{ k8s_config_file }}"
-        regexp: 'certificate-authority-data'
-        replace: '#certificate-authority-data'
-      delegate_to: localhost
+    # - name: Comment out certificate-authority-data
+    #   become: true
+    #   become_user: "{{ local_user }}"
+    #   ansible.builtin.replace:
+    #     path: "{{ k8s_config_file }}"
+    #     regexp: 'certificate-authority-data'
+    #     replace: '#certificate-authority-data'
+    #   delegate_to: localhost
 
-    - name: Replace server IP
-      become: true
-      become_user: "{{ local_user }}"
-      ansible.builtin.replace:
-        path: "{{ k8s_config_file }}"
-        regexp: 'https:\/\/.*:([0-9]+)'
-        replace: 'https://{{ ansible_host }}:\1'
-      delegate_to: localhost
+    # - name: Replace server IP
+    #   become: true
+    #   become_user: "{{ local_user }}"
+    #   ansible.builtin.replace:
+    #     path: "{{ k8s_config_file }}"
+    #     regexp: 'https:\/\/.*:([0-9]+)'
+    #     replace: 'https://{{ K8S_API_DOMAINS if K8S_API_DOMAINS != '' else ansible_host }}:\1'
+    #   delegate_to: localhost
 
-    - name: Add insecure-skip-tls-verify true
-      become: true
-      become_user: "{{ local_user }}"
-      ansible.builtin.lineinfile:
-        path: "{{ k8s_config_file }}"
-        insertafter: "server"
-        regexp: "insecure-skip-tls-verify"
-        line: "    insecure-skip-tls-verify: true"
-      delegate_to: localhost
+    # - name: Add insecure-skip-tls-verify true
+    #   become: true
+    #   become_user: "{{ local_user }}"
+    #   ansible.builtin.lineinfile:
+    #     path: "{{ k8s_config_file }}"
+    #     insertafter: "server"
+    #     regexp: "insecure-skip-tls-verify"
+    #     line: "    insecure-skip-tls-verify: true"
+    #   delegate_to: localhost
 
     - name: Add default namespace
       become: true

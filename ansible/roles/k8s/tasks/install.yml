@@ -142,4 +142,3 @@
   environment:
     VERIFY_CHECKSUM: "false"
   when: not has_snapd
-  

@@ -1,0 +1,11 @@
+
+- name: Update kube-apiserver etc/hosts
+  become: true
+  ansible.builtin.lineinfile:
+    dest: "/etc/hosts"
+    regexp: "k8s-api$"
+    line: "{{ K8S_HA_VIP }}    k8s-api"
+    state: present
+  tags: ['base']
+  delegate_to: "{{ 'localhost' if localonly else inventory_hostname}}"
+  when: K8S_HA_VIP != ""

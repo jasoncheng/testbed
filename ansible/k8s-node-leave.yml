@@ -1,0 +1,75 @@
+---
+- name: Leave k8s
+  gather_facts: false
+  hosts: k8sM[0]
+  vars_prompt:
+  - name: control_plane
+    prompt: What is your control-plane?
+    default: "{{ groups['k8sM'][0] }}"
+    private: no
+  - name: node_to_leave
+    prompt: Which node you want to leave cluster?
+    private: no
+  tasks:
+  - debug: msg="control-plane [{{ control_plane }}], node to leave [{{ node_to_leave }}]"
+
+  - name: Validate - Cannot empty
+    ansible.builtin.assert:
+      that:
+        - control_plane != "" and node_to_leave != ""
+
+  - name: Validate - Cannot equal
+    ansible.builtin.assert:
+      that:
+        - control_plane != node_to_leave
+
+  - name: Validate - control_plane if a valid node
+    ansible.builtin.assert:
+      that:
+        - control_plane in groups['k8s']
+
+  - name: Validate - leaving node if a valid node
+    ansible.builtin.assert:
+      that:
+        - node_to_leave in groups['k8s']
+  
+  - name: Cordon all node
+    ansible.builtin.command: kubect cordon {{ node_to_leave }}
+    failed_when: false
+    with_items: "{{ groups['k8s'] }}"
+    when: item != node_to_leave
+    
+  - name: Drain
+    ansible.builtin.command:
+      cmd: kubectl drain {{ node_to_leave }} --force --grace-period=10 --ignore-daemonsets --delete-emptydir-data
+    register: result
+    failed_when: false
+    changed_when: result.rc == 0
+  
+  - name: Delete node
+    ansible.builtin.command:
+      cmd: kubectl delete no {{ node_to_leave }}
+    register: result
+    failed_when: false
+    changed_when: result.rc == 0
+
+  - name: Reset 
+    ansible.builtin.command: kubeadm reset --force
+    delegate_to: "{{ node_to_leave }}"
+
+  - name: Uncordon all node
+    ansible.builtin.command: kubectl uncordon {{ node_to_leave }}
+    failed_when: false
+    with_items: "{{ groups['k8s'] }}"
+    when: item != node_to_leave
+
+  - name: Delete kube config
+    ansible.builtin.file:
+      state: absent
+      path: ~/.kube/config
+    delegate_to: "{{ node_to_leave }}"
+    
+  - name: Show nodes
+    ansible.builtin.include_role:
+      name: k8s
+      tasks_from: ls_node

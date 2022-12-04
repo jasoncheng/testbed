@@ -27,6 +27,15 @@ pi1
 [k8sS]
 pi[2:5]
 
+[k8sApis]
+pi1
+pi4
+pi5
+
+[HA]
+pi0
+pi5
+
 [ceph]
 pi1
 

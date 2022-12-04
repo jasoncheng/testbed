@@ -11,9 +11,11 @@
     state: directory
     mode: 0755
     owner: "{{ item.owner }}"
+  when:
+    - K8S_USER != "root" or '/home/' not in item.path
   with_items:
-  - { "owner": "root", "path": "/root/.kube" }
-  - { "owner": "{{ K8S_USER }}", "path": "/home/{{ K8S_USER }}/.kube" }
+    - { "owner": "root", "path": "/root/.kube" }
+    - { "owner": "{{ K8S_USER }}", "path": "/home/{{ K8S_USER }}/.kube" }
 
 - name: Pi4 config
   when: is_pi4 and is_cent_os

@@ -23,3 +23,10 @@
   delegate_to: localhost
   with_dict: "{{ DOMAINS }}"
   when: inventory_hostname == groups['nodes'][0]
+
+- name: Add Kube-ApiServer domain to etc/hosts
+  vars:
+    localonly: yes
+  ansible.builtin.include_role:
+    name: base
+    tasks_from: hosts-k8s-api

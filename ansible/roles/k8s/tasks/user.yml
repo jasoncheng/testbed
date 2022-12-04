@@ -1,34 +1,46 @@
 - name: create user kube
-  user: name={{ K8S_USER }} append=yes state=present createhome=yes groups=root shell=/bin/bash
+  user:
+    name: "{{ K8S_USER }}"
+    append: yes
+    state: present
+    createhome: yes
+    groups: root
+    shell: /bin/bash
   when: K8S_USER != OS_USER
 
-- name: sudo without password
-  lineinfile:
+- name: Sudo without password
+  ansible.builtin.lineinfile:
     dest: /etc/sudoers
     line: "{{ K8S_USER }} ALL=(ALL) NOPASSWD: ALL"
     validate: "visudo -cf %s"
   when: K8S_USER != OS_USER
 
-- set_fact: authKey="../terraform/{{ RESOURCE_PREFIX }}.pub"
+- name: Define terraform generate key
+  ansible.builtin.set_fact:
+    authKey: "../terraform/{{ RESOURCE_PREFIX }}.pub"
 
-- name: if project authorized key exists
-  stat:
+- name: If project authorized key exists
+  ansible.builtin.stat:
     path: "{{ authKey }}"
   register: authKeyStat
 
-- name: set authorized keys
+- name: Set authorized keys
   become_user: "{{ K8S_USER }}"
-  authorized_key: user={{ K8S_USER }} key="{{ lookup('file', authKey) }}"
+  ansible.builtin.authorized_key:
+    user: "{{ K8S_USER }}"
+    key: "{{ lookup('file', authKey) }}"
   when: authKeyStat.stat.exists
 
 - set_fact: authKeyDefault="~/.ssh/id_rsa.pub"
 
-- name: if local authorized key exists
-  stat:
+- name: If local authorized key exists
+  ansible.builtin.stat:
     path: "{{ authKeyDefault }}"
   register: authKeyDefaultStat
 
-- name: set authorized keys (default)
+- name: Set authorized keys (default)
   become_user: "{{ K8S_USER }}"
-  authorized_key: user={{ K8S_USER }} key="{{ lookup('file', authKeyDefault) }}"
+  ansible.builtin.authorized_key:
+    user: "{{ K8S_USER }}"
+    key: "{{ lookup('file', authKeyDefault) }}"
   when: authKeyDefaultStat.stat.exists

@@ -22,29 +22,26 @@
   roles:
     - { role: k8s.slaver, tags: ['k8s', 'k8sS'] }
 
-- name: Install ingress controller
+- name: Ingress Nginx
   hosts: k8sM
   gather_facts: false
-  tags: ['ingress-nginx']
-  tasks:
-    - name: If k8s only have single node
-      ansible.builtin.shell: |
-        kubectl taint node pi1 node-role.kubernetes.io/control-plane:NoSchedule-
-      when: cluster_size | int < 3
-    - ansible.builtin.shell: |
-        helm upgrade --install ingress-nginx ingress-nginx \
-        --repo https://kubernetes.github.io/ingress-nginx \
-        --namespace ingress-nginx --create-namespace --set controller.hostNetwork=true,controller.kind=DaemonSet
-      # when: cluster_size | int > 2
-    - name: remove ValidatingWebhookConfiguration
-      ansible.builtin.shell: kubectl delete -A ValidatingWebhookConfiguration ingress-nginx-admission
-      when: cluster_size | int > 2
-    - name: warning message
-      ansible.builtin.debug:
-        msg: "k8s ingress nginx require at least 3 node on cluster, so we set taint none on your single node"
-      when: cluster_size | int < 3
+  roles:
+    - { role: k8s.ingress.nginx , tags: ['ingress-nginx'] }
 
-# - name: K8S - Util
-#   hosts: k8sM
-#   roles:
-#     - { role: k8s.util, tags: ['k8s', 'k8sM'] }
+- name: Deploy kube config to all nodes
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Deploy
+      ansible.builtin.include_role:
+        name: k8s.slaver
+        tasks_from: kube-config
+  
+- name: Show Info
+  hosts: k8sM[0]
+  gather_facts: false
+  tasks:
+  - name: List nodes
+    ansible.builtin.include_role:
+      name: k8s
+      tasks_from: ls_node

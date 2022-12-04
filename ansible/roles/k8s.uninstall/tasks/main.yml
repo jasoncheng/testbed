@@ -1,0 +1,19 @@
+- name: Cni0
+  ansible.builtin.include_role:
+    name: k8s.uninstall
+    tasks_from: cni0
+
+- name: Kubeadm
+  ansible.builtin.include_role:
+    name: k8s.uninstall
+    tasks_from: kubeadm
+
+- name: Package
+  ansible.builtin.include_role:
+    name: k8s.uninstall
+    tasks_from: package
+
+- name: Files
+  ansible.builtin.include_role:
+    name: k8s.uninstall
+    tasks_from: config

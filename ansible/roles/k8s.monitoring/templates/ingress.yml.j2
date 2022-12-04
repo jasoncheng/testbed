@@ -35,3 +35,14 @@ spec:
             name: prometheus-stack-grafana
             port:
               number: 80
+
+  - host: {{ DOMAINS['alertmanager'] }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: prometheus-stack-kube-prom-alertmanager
+            port:
+              number: 9093

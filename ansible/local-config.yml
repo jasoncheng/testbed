@@ -7,7 +7,7 @@
     ansible.builtin.include_role:
       name: base
       tasks_from: ssh-local
-      
+
   - name: Inventory to etc hosts
     ansible.builtin.include_role:
       name: base

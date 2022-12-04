@@ -1,0 +1,10 @@
+
+- name: Delete Content and Directory
+  ansible.builtin.file:
+    path: "{{ item }}"
+    force: true
+    state: absent
+  with_items:
+    - /etc/kubernetes/
+    - ~/.kube
+  tags: ['config']
