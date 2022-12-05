@@ -3,26 +3,57 @@
     name: rook-release
     repo_url: https://charts.rook.io/release
 
+# https://github.com/rook/rook/blob/release-1.9/deploy/charts/rook-ceph/values.yaml
 - name: Deploy operator
   kubernetes.core.helm:
-    name: rook-ceph
     create_namespace: true
     release_namespace: rook-ceph
     chart_ref: rook-release/rook-ceph
     update_repo_cache: true
-    release_name: rook-ceph
     # state: absent
+    release_name: rook-ceph
+    release_values:
+      useOperatorHostNetwork: true
+      monitoring:
+        enabled: true
+      resources: null
+      csi:
+        enableCephfsDriver: false
+        enableCephfsSnapshotter: false
+        csiRBDProvisionerResource: null
+        csiRBDPluginResource: null
+        csiCephFSProvisionerResource: null
+        csiCephFSPluginResource: null
+        csiNFSPluginResource: null
 
+# https://github.com/rook/rook/blob/release-1.9/deploy/charts/rook-ceph-cluster/values.yaml
 - name: Deploy cluster
   kubernetes.core.helm:
     create_namespace: true
     release_namespace: rook-ceph
     chart_ref: rook-release/rook-ceph-cluster
     update_repo_cache: true
-    release_name: rook-ceph-cluster
     # state: absent
-    values:
+    release_name: rook-ceph-cluster
+    release_values:
       monitoring:
         enabled: true
       toolbox:
         enabled: true
+      cephClusterSpec:
+        mon:
+          allowMultiplePerNode: true
+        mgr:
+          allowMultiplePerNode: true
+        dashboard:
+          enabled: true
+          ssl: false
+          port: 7000
+        crashCollector:
+          disable: true
+        resources: null
+      # disable CephFS      
+      cephFileSystems: null
+      cephFileSystemVolumeSnapshotClass: null
+      # disable RGW
+      cephObjectStores: null

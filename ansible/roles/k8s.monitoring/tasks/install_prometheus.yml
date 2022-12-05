@@ -67,16 +67,16 @@
               target_label: instance
             - target_label: __address__
               replacement: blackbox-prometheus-blackbox-exporter.blackbox:9115
-      additionalPrometheusRulesMap:
-        uptime:
-          groups:
-          - name: jason
-            rules:
-            - alert: EndPointDown
-              expr: probe_success == 0
-                # for: 30s
-                # lables:
-                #   severity: "critical"
-              annotations:
-                summary: "Endpoint {{ '{{$lables.instance}}' }} down"
+      # additionalPrometheusRulesMap:
+      #   uptime:
+      #     groups:
+      #     - name: jason
+      #       rules:
+      #       - alert: EndPointDown
+      #         expr: probe_success == 0
+      #           # for: 30s
+      #           # lables:
+      #           #   severity: "critical"
+      #         annotations:
+      #           summary: "Endpoint {{ '{{$lables.instance}}' }} down"
         

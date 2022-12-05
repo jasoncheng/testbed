@@ -3,7 +3,6 @@
     local_file: "/tmp/kube_config_for_nodes"
 
 - name: Download .kube/config
-  run_once: true
   ansible.builtin.fetch:
     src: "{{ k8s_config_file }}"
     dest: "{{ local_file }}"

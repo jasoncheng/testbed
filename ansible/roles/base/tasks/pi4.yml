@@ -16,6 +16,7 @@
   - python-lxml
   - libxml2
   - httpd-tools
+  - lvm2
 
 - name: Pip3 packages for pi4 only
   ansible.builtin.pip:

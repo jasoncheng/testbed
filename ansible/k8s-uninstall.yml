@@ -1,3 +1,7 @@
+---
+- name: Set env
+  ansible.builtin.import_playbook: env.yml
+
 - name: Uninstall Kubernetes
   gather_facts: false
   hosts: k8s
