@@ -21,11 +21,12 @@
           alertManager: true
       alertmanager:
         enabled: true
-        # config:
-        #   global:
-        #     smtp_smarthost: 'localhost:25'
-        #     smtp_from: 'alertmanager@example.com'
-        #     smtp_require_tls: false
+        global:
+          smtp_smarthost: '{{ smtp_host }}'
+          smtp_from: '{{ smtp_from }}'
+          smtp_auth_username: "{{ smtp_user }}"
+          smtp_auth_password: "{{ smtp_pass }}"
+          smtp_require_tls: false
         #   route:
         #     group_by: ['namespace', 'instance', 'severity']
         #     receiver: 'jason'

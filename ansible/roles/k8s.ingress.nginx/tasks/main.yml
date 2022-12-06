@@ -15,7 +15,11 @@
   ansible.builtin.command: |
     helm upgrade --install ingress-nginx ingress-nginx \
     --repo https://kubernetes.github.io/ingress-nginx \
-    --namespace ingress-nginx --create-namespace --set controller.hostNetwork=true,controller.kind=DaemonSet
+    --namespace ingress-nginx --create-namespace \
+    --set controller.hostNetwork=true \
+    --set controller.kind=DaemonSet \
+    --set controller.service.nodePorts.http={{ INGRESS_NGINX_HTTP_PORT }} \
+    --set controller.service.nodePorts.https={{ INGRESS_NGINX_HTTPS_PORT }}
 
 - name: Remove ValidatingWebhookConfiguration
   ansible.builtin.command: kubectl delete -A ValidatingWebhookConfiguration ingress-nginx-admission

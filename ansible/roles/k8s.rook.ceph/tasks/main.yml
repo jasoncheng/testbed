@@ -1,41 +1,68 @@
 - name: Add repo
+  when: inventory_hostname in groups['k8sM']
   kubernetes.core.helm_repository:
     name: rook-release
     repo_url: https://charts.rook.io/release
 
-# https://github.com/rook/rook/blob/release-1.9/deploy/charts/rook-ceph/values.yaml
-- name: Deploy operator
+- name: Set fact
+  ansible.builtin.set_fact:
+    action: "{{ 'present' if uninstall is not defined or not uninstall else 'absent' }}"
+
+# Refs: https://github.com/rook/rook/blob/release-1.9/deploy/charts/rook-ceph/values.yaml
+# ceph-volume lvm zap /dev/sda
+# https://forum.proxmox.com/threads/how-to-wipe-a-disk-which-was-osd-before.59373/?fbclid=IwAR2YBNQCwUubSqH8C3OJPDAgFVMxlCdlpHwV0A5FAx5CTtCemA_Pd0J3baM
+- name: "Do {{ action }} rook-ceph operator"
+  when: inventory_hostname in groups['k8sM']
   kubernetes.core.helm:
     create_namespace: true
     release_namespace: rook-ceph
     chart_ref: rook-release/rook-ceph
     update_repo_cache: true
-    # state: absent
+    release_state: "{{ action }}"
     release_name: rook-ceph
     release_values:
+      pspEnable: false
       useOperatorHostNetwork: true
       monitoring:
         enabled: true
       resources: null
       csi:
-        enableCephfsDriver: false
-        enableCephfsSnapshotter: false
+        
+        forceCephFSKernelClient: false
+        enableSelinuxRelabeling: false
+        disableAdmissionController: true
+        hostpathRequiresPrivileged: true
+
+        # RBD
+        enableRbdDriver: false
+        enableRBDSnapshotter: false
         csiRBDProvisionerResource: null
         csiRBDPluginResource: null
-        csiCephFSProvisionerResource: null
+
+        # CephFS
+        enableCephfsDriver: true
+        enableCephfsSnapshotter: false
         csiCephFSPluginResource: null
+
+        # GRpc
+        enableGrpcMetrics: false
+
+        # CSI
+        csiNFSProvisionerResource: null
         csiNFSPluginResource: null
 
-# https://github.com/rook/rook/blob/release-1.9/deploy/charts/rook-ceph-cluster/values.yaml
-- name: Deploy cluster
+# Refs: https://github.com/rook/rook/blob/release-1.9/deploy/charts/rook-ceph-cluster/values.yaml
+- name: "Do {{ action }} rook-ceph-cluster"
+  when: inventory_hostname in groups['k8sM']
   kubernetes.core.helm:
     create_namespace: true
     release_namespace: rook-ceph
     chart_ref: rook-release/rook-ceph-cluster
     update_repo_cache: true
-    # state: absent
+    release_state: "{{ action }}"
     release_name: rook-ceph-cluster
     release_values:
+      pspEnable: false
       monitoring:
         enabled: true
       toolbox:
@@ -52,8 +79,18 @@
         crashCollector:
           disable: true
         resources: null
-      # disable CephFS      
-      cephFileSystems: null
-      cephFileSystemVolumeSnapshotClass: null
-      # disable RGW
+        storage:
+          useAllNodes: false
+          useAllDevices: false
+          nodes:
+            - name: pi1
+              devices:
+                - name: "sda"
+            - name: pi2
+              devices:
+                - name: "sda"
+            - name: pi3
+              devices:
+                - name: "sda"
+      cephBlockPools: null
       cephObjectStores: null

@@ -1,0 +1,12 @@
+---
+- name: Set env
+  ansible.builtin.import_playbook: env.yml
+
+- name: Reset Rook And Ceph
+  hosts: k8s
+  gather_facts: false
+  tasks:
+  - name: Reset now
+    ansible.builtin.include_role:
+      name: k8s.rook.ceph
+      tasks_from: reset

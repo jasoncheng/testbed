@@ -1,0 +1,15 @@
+- name: Install utils
+  ansible.builtin.package:
+    name: gdisk
+    state: present
+
+- name: Zapping device
+  ansible.builtin.shell: |
+    DISK="/dev/sda"
+    sgdisk --zap-all $DISK || true
+    dd if=/dev/zero of="$DISK" bs=1M count=100 oflag=direct,dsync
+    blkdiscard $DISK || true
+    partprobe $DISK
+    ls /dev/mapper/ceph-* | xargs -I% -- dmsetup remove % || true
+    rm -rf /dev/ceph-*
+    rm -rf /dev/mapper/ceph--*

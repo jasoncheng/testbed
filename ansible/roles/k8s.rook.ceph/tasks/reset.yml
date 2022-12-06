@@ -1,0 +1,67 @@
+- name: Uninstall Rook Chart
+  vars:
+    uninstall: true
+  ansible.builtin.include_role:
+    name: k8s.rook.ceph
+    tasks_from: main
+
+- name: Remove /var/lib/rook folder
+  ansible.builtin.file:
+    path: /var/lib/rook/
+    state: absent
+
+- name: Format hard disk
+  ansible.builtin.include_role:
+    name: base
+    tasks_from: zapping-device
+
+- name: Delete others
+  ansible.builtin.shell: |
+    kubectl -n rook-ceph patch configmap rook-ceph-mon-endpoints --type merge -p '{"metadata":{"finalizers": []}}' || true
+    kubectl -n rook-ceph patch secrets rook-ceph-mon --type merge -p '{"metadata":{"finalizers": []}}' || true
+  no_log: true
+
+- name: Remove finalizers
+  ansible.builtin.shell: |
+    for CRD in $(kubectl get crd -n rook-ceph | awk '/ceph.rook.io/ {print $1}'); do
+      kubectl get -n rook-ceph "$CRD" -o name | \
+      xargs -I {} kubectl patch -n rook-ceph {} --type merge -p '{"metadata":{"finalizers": []}}'
+    done
+  when: inventory_hostname in groups['k8sM']
+
+- name: Empty finalizers
+  ansible.builtin.shell: |
+    kubectl patch ns rook-ceph -p '{"metadata":{"finalizers":null}}' || true
+    kubectl get namespace "rook-ceph" -o json | tr -d "\n" | sed "s/\"finalizers\": \[[^]]\+\]/\"finalizers\": []/" | kubectl replace --raw /api/v1/namespaces/rook-ceph/finalize -f - || true
+  when: inventory_hostname in groups['k8sM']
+
+- name: Delete All namespace
+  ansible.builtin.shell: |
+    kubectl api-resources --verbs=list --namespaced -o name \
+    | xargs -n 1 kubectl get --show-kind --ignore-not-found -n rook-ceph
+  when: inventory_hostname in groups['k8sM']
+
+- name: Delete CephFilesystem
+  ansible.builtin.command: kubectl delete --ignore-not-found -n rook-ceph CephFilesystem ceph-filesystem
+  ignore_errors: true
+  when: inventory_hostname in groups['k8sM']
+
+- name: Delete cephcluster
+  ansible.builtin.command: kubectl delete --ignore-not-found -n rook-ceph cephcluster rook-ceph
+  ignore_errors: true
+  when: inventory_hostname in groups['k8sM']
+
+- name: Reboot
+  ansible.builtin.include_role:
+    name: base
+    tasks_from: reboot
+
+# - name: Remove rook namespace
+#   ansible.builtin.k8s:
+#     api_version: v1
+#     state: absent
+#     kind: Namespace
+#     name: rook-ceph
+#   no_log: true
+#   failed_when: false
+#   when: inventory_hostname in groups['k8sM']

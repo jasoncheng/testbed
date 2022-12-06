@@ -53,11 +53,11 @@
 - name: Apply new settings
   ansible.builtin.command: sysctl --system
 
-- name: install docker
-  ansible.builtin.shell: |
-    curl -fsSL https://get.docker.com -o get-docker.sh
-    sh get-docker.sh
-  when: is_cent_os
+# - name: install docker
+#   ansible.builtin.shell: |
+#     curl -fsSL https://get.docker.com -o get-docker.sh
+#     sh get-docker.sh
+#   when: is_cent_os
 
 - name: Pi4 - enable and start docker
   ansible.builtin.systemd:
@@ -129,6 +129,12 @@
     - kubelet
     - kubeadm
     - kubectl
+
+- name: Enable kubelet service
+  ansible.builtin.systemd:
+    name: kubelet
+    enabled: true
+    state: started
 
 - name: Install helm by snapd
   snap:

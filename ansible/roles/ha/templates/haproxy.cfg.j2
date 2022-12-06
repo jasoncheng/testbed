@@ -63,6 +63,16 @@ frontend kube-apiserver-https
     bind *:16443
     default_backend kube-apiserver-backend
 
+frontend ingress-nginx-http
+    mode tcp
+    bind *:80
+    default_backend ingress-nginx-backend
+
+frontend ingress-nginx-https
+    mode tcp
+    bind *:443
+    default_backend ingress-nginx-dashboard-backend
+
 #---------------------------------------------------------------------
 # round robin balancing between the various backends
 #---------------------------------------------------------------------
@@ -74,3 +84,22 @@ backend kube-apiserver-backend
     {% for host in groups['k8sApis'] %}
     server {{ host }} {{ hostvars[host]['ansible_default_ipv4']['address'] }}:6443 check
     {% endfor %}
+
+backend ingress-nginx-backend
+    mode tcp
+    balance roundrobin
+    stick-table type ip size 200k expire 30m
+    stick on src
+    {% for host in groups['k8s'] %}
+    server {{ host }} {{ hostvars[host]['ansible_default_ipv4']['address'] }}:{{ INGRESS_NGINX_HTTP_PORT }} check
+    {% endfor %}
+
+backend ingress-nginx-dashboard-backend
+    mode tcp
+    balance roundrobin
+    stick-table type ip size 200k expire 30m
+    stick on src
+    {% for host in groups['k8s'] %}
+    server {{ host }} {{ hostvars[host]['ansible_default_ipv4']['address'] }}:{{ INGRESS_NGINX_HTTPS_PORT }} check
+    {% endfor %}
+

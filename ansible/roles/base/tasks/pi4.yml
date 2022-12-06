@@ -8,8 +8,8 @@
 - name: Install package for CentOS7 w/ Pi4
   package: name="{{ item }}" state=latest
   with_items:
-  - htop
-  - iftop
+  # - htop
+  # - iftop
   - vim
   - gcc
   - python-cffi

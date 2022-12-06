@@ -17,7 +17,7 @@
   ansible.builtin.lineinfile:
     dest: "/etc/hosts"
     regexp: "{{ item.value }}$"
-    line: "{{ hostvars[random_host].ansible_host }}   {{ item.value }}"
+    line: "{{ K8S_HA_VIP }}   {{ item.value }}"
     state: present
   tags: ['base', 'etchosts']
   delegate_to: localhost

@@ -1,11 +1,25 @@
-- name: Check if reboot required
+- name: Check if reboot required in Ubuntu
   become: true
-  stat:
+  ansible.builtin.stat:
     path: /var/run/reboot-required
   register: reboot_required_file
 
-- name: Reboot now
+- name: Reboot Ubuntu now
   become: true
-  reboot:
+  ansible.builtin.reboot:
     reboot_timeout: 300
   when: reboot_required_file.stat.exists == true
+
+- name: Check if reboot required in CentOS
+  ansible.builtin.command: needs-restarting
+  register: centOSReboot
+  when: is_cent_os
+
+- name: Reboot CentOS now
+  become: true
+  ansible.builtin.reboot:
+    reboot_timeout: 300
+    connect_timeout: 5
+    test_command: whoami
+  failed_when: false
+  when: centOSReboot.rc != 0
