@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ceph-ingress
+  namespace: rook-ceph
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: {{ DOMAINS['ceph'] }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: rook-ceph-mgr-dashboard
+            port:
+              number: {{ INGRESS_NGINX_HTTP_PORT }}

@@ -27,12 +27,10 @@
         enabled: true
       resources: null
       csi:
-        
-        forceCephFSKernelClient: false
-        enableSelinuxRelabeling: false
-        disableAdmissionController: true
-        hostpathRequiresPrivileged: true
-
+        # forceCephFSKernelClient: false
+        # enableSelinuxRelabeling: false
+        # disableAdmissionController: true
+        # hostpathRequiresPrivileged: true
         # RBD
         enableRbdDriver: false
         enableRBDSnapshotter: false
@@ -62,12 +60,16 @@
     release_state: "{{ action }}"
     release_name: rook-ceph-cluster
     release_values:
-      pspEnable: false
+      # pspEnable: false
       monitoring:
         enabled: true
       toolbox:
         enabled: true
       cephClusterSpec:
+        # cephVersion:
+          # image: quay.io/ceph/ceph:v17.2.5 # Quincy
+          # image: quay.io/ceph/ceph:v16.2.10 # Pacific (Default)
+          # allowUnsupported: true
         mon:
           allowMultiplePerNode: true
         mgr:
@@ -75,22 +77,42 @@
         dashboard:
           enabled: true
           ssl: false
-          port: 7000
+          port: "{{ INGRESS_NGINX_HTTP_PORT }}"
         crashCollector:
           disable: true
         resources: null
         storage:
-          useAllNodes: false
-          useAllDevices: false
-          nodes:
-            - name: pi1
-              devices:
-                - name: "sda"
-            - name: pi2
-              devices:
-                - name: "sda"
-            - name: pi3
-              devices:
-                - name: "sda"
+          useAllNodes: true
+          useAllDevices: true
+          # deviceFilter: ^sd[a-z]+$
       cephBlockPools: null
       cephObjectStores: null
+
+- name: Deploy Ingress
+  ansible.builtin.include_role:
+    name: k8s.rook.ceph
+    tasks_from: ingress
+
+- name: Fetch admin password
+  ansible.builtin.shell: |
+    kubectl -n rook-ceph get secret rook-ceph-dashboard-password -o jsonpath="{['data']['password']}" | base64 --decode && echo
+  register: result
+  until: result.rc == 0
+  retries: 10
+  delay: 10
+
+- name: Show admin password
+  ansible.builtin.debug:
+    msg:
+      - "Ceph Portal: http://{{ DOMAINS['ceph'] }}"
+      - " - user: admin"
+      - " - pass: {{ result.stdout }}"
+# Misc
+# ceph mgr module enable rook
+# ceph orch set backend rook
+
+# https://www.cnblogs.com/gzxbkk/p/7737467.html
+# sgdisk -n 1:0:+20G /dev/sda -t 1:45b0969e-9b03-4f30-b4c6-b4b80ceff106 -c 1:"ceph journal"
+# sgdisk -n 2:0:+20G /dev/sda -t 2:45b0969e-9b03-4f30-b4c6-b4b80ceff106 -c 2:"ceph journal"
+# sgdisk -n 3:0:+800G /dev/sda -t 3:4fbd7e29-9d25-41b8-afd0-062c0ceff05d -c 3:"ceph data"
+# sgdisk -n 4:0:+800G /dev/sda -t 4:4fbd7e29-9d25-41b8-afd0-062c0ceff05d -c 4:"ceph data"

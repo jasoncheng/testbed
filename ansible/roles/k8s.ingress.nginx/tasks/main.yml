@@ -11,12 +11,12 @@
   changed_when: result.rc == 0
   with_items: "{{ groups['k8sApis'] }}"
 
+# use haproxy instead --set controller.hostNetwork=true
 - name: Ingress Nginx Install
   ansible.builtin.command: |
     helm upgrade --install ingress-nginx ingress-nginx \
     --repo https://kubernetes.github.io/ingress-nginx \
     --namespace ingress-nginx --create-namespace \
-    --set controller.hostNetwork=true \
     --set controller.kind=DaemonSet \
     --set controller.service.nodePorts.http={{ INGRESS_NGINX_HTTP_PORT }} \
     --set controller.service.nodePorts.https={{ INGRESS_NGINX_HTTPS_PORT }}

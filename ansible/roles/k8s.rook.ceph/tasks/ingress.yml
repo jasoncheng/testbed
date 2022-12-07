@@ -1,0 +1,10 @@
+- name: Create templates
+  ansible.builtin.template:
+    dest: "/tmp/{{ item | replace('.j2', '') }}"
+    src: "{{ item }}"
+  with_items:
+  - "ingress.yml.j2"
+  register: result
+
+- name: Kubectl apply
+  ansible.builtin.shell: "kubectl apply -f /tmp/ingress.yml"
