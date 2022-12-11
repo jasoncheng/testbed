@@ -1,12 +1,22 @@
-- name: Add repo
-  when: inventory_hostname in groups['k8sM']
-  kubernetes.core.helm_repository:
-    name: rook-release
-    repo_url: https://charts.rook.io/release
-
 - name: Set fact
   ansible.builtin.set_fact:
     action: "{{ 'present' if uninstall is not defined or not uninstall else 'absent' }}"
+
+- name: Modprobe rbd
+  ansible.builtin.command: modprobe rbd
+  when: not is_centos7_pi
+
+- name: Modprobe ceph 
+  ansible.builtin.command: modprobe ceph
+  when: not is_centos7_pi
+
+- name: Add repo
+  kubernetes.core.helm_repository:
+    name: rook-release
+    repo_url: https://charts.rook.io/release
+  when:
+    - inventory_hostname in groups['k8sM']
+    - action != "absent"
 
 # Refs: https://github.com/rook/rook/blob/release-1.9/deploy/charts/rook-ceph/values.yaml
 # ceph-volume lvm zap /dev/sda
@@ -24,26 +34,27 @@
       pspEnable: false
       useOperatorHostNetwork: true
       monitoring:
-        enabled: true
+        enabled: false
       resources: null
       csi:
         # forceCephFSKernelClient: false
         # enableSelinuxRelabeling: false
         # disableAdmissionController: true
         # hostpathRequiresPrivileged: true
+
         # RBD
-        enableRbdDriver: false
-        enableRBDSnapshotter: false
+        enableRbdDriver: true
+        enableRBDSnapshotter: true
         csiRBDProvisionerResource: null
         csiRBDPluginResource: null
 
         # CephFS
         enableCephfsDriver: true
-        enableCephfsSnapshotter: false
-        csiCephFSPluginResource: null
+        enableCephfsSnapshotter: true
+        # csiCephFSPluginResource: null
 
         # GRpc
-        enableGrpcMetrics: false
+        # enableGrpcMetrics: false
 
         # CSI
         csiNFSProvisionerResource: null
@@ -60,12 +71,13 @@
     release_state: "{{ action }}"
     release_name: rook-ceph-cluster
     release_values:
-      # pspEnable: false
+      pspEnable: false
       monitoring:
-        enabled: true
+        enabled: false
       toolbox:
         enabled: true
       cephClusterSpec:
+        removeOSDsIfOutAndSafeToRemove: true
         # cephVersion:
           # image: quay.io/ceph/ceph:v17.2.5 # Quincy
           # image: quay.io/ceph/ceph:v16.2.10 # Pacific (Default)
@@ -78,35 +90,42 @@
           enabled: true
           ssl: false
           port: "{{ INGRESS_NGINX_HTTP_PORT }}"
-        crashCollector:
-          disable: true
+        # crashCollector:
+        #   disable: true
         resources: null
         storage:
           useAllNodes: true
           useAllDevices: true
           # deviceFilter: ^sd[a-z]+$
-      cephBlockPools: null
+      # cephBlockPools:
+      #   - spec:
+      #       replicated:
+      #         size: 2
       cephObjectStores: null
 
 - name: Deploy Ingress
   ansible.builtin.include_role:
     name: k8s.rook.ceph
     tasks_from: ingress
+  when: action != "absent"
 
 - name: Fetch admin password
   ansible.builtin.shell: |
     kubectl -n rook-ceph get secret rook-ceph-dashboard-password -o jsonpath="{['data']['password']}" | base64 --decode && echo
   register: result
-  until: result.rc == 0
-  retries: 10
+  until: result.rc == 0 and result.stdout != ""
+  retries: 18
   delay: 10
+  when: action != "absent"
 
-- name: Show admin password
+- name: Show dashboard info
   ansible.builtin.debug:
     msg:
-      - "Ceph Portal: http://{{ DOMAINS['ceph'] }}"
-      - " - user: admin"
-      - " - pass: {{ result.stdout }}"
+      - "Ceph Portal: https://{{ DOMAINS['ceph'] }}"
+      - "user: admin"
+      - "pass: {{ result.stdout }}"
+  when: action != "absent"
+
 # Misc
 # ceph mgr module enable rook
 # ceph orch set backend rook
@@ -116,3 +135,23 @@
 # sgdisk -n 2:0:+20G /dev/sda -t 2:45b0969e-9b03-4f30-b4c6-b4b80ceff106 -c 2:"ceph journal"
 # sgdisk -n 3:0:+800G /dev/sda -t 3:4fbd7e29-9d25-41b8-afd0-062c0ceff05d -c 3:"ceph data"
 # sgdisk -n 4:0:+800G /dev/sda -t 4:4fbd7e29-9d25-41b8-afd0-062c0ceff05d -c 4:"ceph data"
+
+# sgdisk -n 1:0:+20G /dev/sda -t 1:45b0969e-9b03-4f30-b4c6-b4b80ceff106 -c 1:"ceph journal"
+# sgdisk -n 2:0:+1900G /dev/sda -t 2:4fbd7e29-9d25-41b8-afd0-062c0ceff05d -c 2:"ceph data"
+# dd if=/dev/zero of=/dev/sda1 bs=1M count=100 oflag=direct,dsync
+# dd if=/dev/zero of=/dev/sda2 bs=1M count=100 oflag=direct,dsync
+# dd if=/dev/zero of=/dev/sda3 bs=1M count=100 oflag=direct,dsync
+# dd if=/dev/zero of=/dev/sda4 bs=1M count=100 oflag=direct,dsync
+
+# sgdisk -n 1:0:+145G /dev/sda
+# dd if=/dev/zero of=/dev/sda1 bs=1M count=100 oflag=direct,dsync
+
+# sgdisk -n 1:0:+145G /dev/sdb
+# sgdisk -n 2:0:+145G /dev/sdb
+# dd if=/dev/zero of=/dev/sdb1 bs=1M count=100 oflag=direct,dsync
+
+# ceph mgr module enable rook
+# ceph orch set backend rook
+
+# kubectl patch storageclass ceph-block -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"false"}}}'
+# kubectl patch storageclass ceph-filesystem -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'

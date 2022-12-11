@@ -1,0 +1,69 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
+defaultRules:
+  rules:
+     alertManager: true
+alertmanager:
+  enabled: true
+  {% if CEPH_STORAGE_CLASS is defined %}
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: {{ CEPH_STORAGE_CLASS }}
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 7Gi
+  {% endif %}
+  global:
+    smtp_smarthost: '{{ smtp_host }}'
+    smtp_from: '{{ smtp_from }}'
+    smtp_auth_username: "{{ smtp_user }}"
+    smtp_auth_password: "{{ smtp_pass }}"
+    smtp_require_tls: false
+grafana:
+  adminPassword: "{{ grafana_password }}"
+  grafana.ini:
+    smtp:
+      enabled: true
+      host: "{{ smtp_host }}"
+      user: "{{ smtp_user }}"
+      password: "{{ smtp_pass }}"
+      from_address: "{{ smtp_from }}"
+  smtp:
+    existingSecret: ""
+    userKey: "user"
+    passwordKey: "password"
+    
+{% if CEPH_STORAGE_CLASS is defined %}
+thanosRulerSpec:
+  volumeClaimTemplate:
+    spec:
+      storageClassName: {{ CEPH_STORAGE_CLASS }}
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 8Gi
+{% endif %}
+
+prometheus:
+  {% if CEPH_STORAGE_CLASS is defined %}
+  persistentVolume:
+    storageClass: {{ CEPH_STORAGE_CLASS }}
+    subPath: "/prome"
+  storageSpec:
+    volumeClaimTemplate:
+      spec:
+        storageClassName: {{ CEPH_STORAGE_CLASS }}
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 6Gi
+  {% endif %}
+  prometheusSpec:
+    additionalScrapeConfigs:
+    - job_name: 'http-request-total'
+      scrape_interval: 5s
+      scrape_timeout: 5s
+      static_configs:
+      - targets: ['http-request-total.default.svc.cluster.local:9121']

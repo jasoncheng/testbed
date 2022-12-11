@@ -3,15 +3,35 @@
 # we just random pick node as endpoint.
 # Refs: https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#control-plane-node-isolation
 
+# use haproxy instead --set controller.hostNetwork=true
+# - name: Add IngressNginx repo
+#   kubernetes.core.helm_repository:
+#     name: ingress-nginx
+#     repo_url: "https://kubernetes.github.io/ingress-nginx"
+
+# - name: Install IngressNginx
+#   kubernetes.core.helm:
+#     create_namespace: true
+#     release_name: ingress-nginx
+#     release_namespace: ingress-nginx
+#     update_repo_cache: true
+#     chart_ref: ingress-nginx/ingress-nginx
+#     release_values:
+#       controller:
+#         kind: DaemonSet
+#         service:
+#           nodePorts:
+#             http: "{{ INGRESS_NGINX_HTTP_PORT }}"
+#             https: "{{ INGRESS_NGINX_HTTPS_PORT }}"
+
 - name: Run taint NoSchedule-, plz don't do it on production, could have security issue
   ansible.builtin.command: "kubectl taint node {{ item }} node-role.kubernetes.io/control-plane:NoSchedule-"
-  # when: cluster_size | int <= 5
   register: result
   failed_when: result.rc != 0 and 'not found' not in result.stderr
   changed_when: result.rc == 0
   with_items: "{{ groups['k8sApis'] }}"
+  when: inventory_hostname != groups['k8sM'][0]
 
-# use haproxy instead --set controller.hostNetwork=true
 - name: Ingress Nginx Install
   ansible.builtin.command: |
     helm upgrade --install ingress-nginx ingress-nginx \

@@ -5,11 +5,11 @@
   register: result
   changed_when: result.rc != 1
 
-- name: Install package for CentOS7 w/ Pi4
-  package: name="{{ item }}" state=latest
+- name: Install package for CentOS 7 or 9 w/ Pi4
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: latest
   with_items:
-  # - htop
-  # - iftop
   - vim
   - gcc
   - python-cffi
@@ -17,6 +17,23 @@
   - libxml2
   - httpd-tools
   - lvm2
+  - gdisk
+  - whatprovides
+  - needs-restarting
+  ignore_errors: true
+  failed_when: false
+
+- name: Install package for CentOS Stream 9 w/ Pi4
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+  - htop
+  - iftop
+  - iotop
+  ignore_errors: true
+  failed_when: false
+  when: is_centos9_pi
 
 - name: Pip3 packages for pi4 only
   ansible.builtin.pip:
@@ -26,3 +43,4 @@
     - pyyaml
     - docker==4.4.4
   ignore_errors: true
+  failed_when: false

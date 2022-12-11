@@ -15,6 +15,11 @@
     name: base
     tasks_from: zapping-device
 
+- name: Format Jason's and Nancy's hard disk, haha..
+  ansible.builtin.include_role:
+    name: k8s.rook.ceph
+    tasks_from: JN_Pis_only
+
 - name: Delete others
   ansible.builtin.shell: |
     kubectl -n rook-ceph patch configmap rook-ceph-mon-endpoints --type merge -p '{"metadata":{"finalizers": []}}' || true

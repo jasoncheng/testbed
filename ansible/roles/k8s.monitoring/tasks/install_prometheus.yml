@@ -1,3 +1,12 @@
+# - name: Define CephStorageClass if exists
+#   ansible.builtin.set_fact:
+#     volumeClaimTemplate:
+#       spec:
+#         storageClassName: "{{ CEPH_STORAGE_CLASS }}"
+#         accessModes: ["ReadWriteOnce"]
+#         # selector: {}
+#   when: CEPH_STORAGE_CLASS is defined
+
 - name: Prometheus - Load Scrape Urls from additionalScrapeUrls.yml
   ansible.builtin.include_vars:
     dir: vars
@@ -9,66 +18,64 @@
     repo_url: "{{ chart_prometheus }}"
 
 - name: Prometheus - Deploy
+  vars:
+    rendered_template: "{{ lookup('template', 'prometheus_values.yml') }}"
   kubernetes.core.helm:
     release_name: prometheus-stack
     release_namespace: "{{ prometheus_namespace }}"
     create_namespace: true
     chart_ref: prometheus-community/kube-prometheus-stack
     update_repo_cache: true
-    release_values:
-      defaultRules:
-        rules:
-          alertManager: true
-      alertmanager:
-        enabled: true
-        config:
-          global:
-            smtp_smarthost: '{{ smtp_host }}'
-            smtp_from: '{{ smtp_from }}'
-            smtp_auth_username: "{{ smtp_user }}"
-            smtp_auth_password: "{{ smtp_pass }}"
-            smtp_require_tls: false
-        #   route:
-        #     group_by: ['namespace', 'instance', 'severity']
-        #     receiver: 'jason'
-        #   receivers:
-        #   - name: 'jason'
-        #     email_configs:
-        #     - to: '17hado.com@gmail.com'
-      grafana:
-        adminPassword: "{{ grafana_password }}"
-        grafana.ini:
-          smtp:
-            enabled: true
-            host: "{{ smtp_host }}"
-            user: "{{ smtp_user }}"
-            password: "{{ smtp_pass }}"
-            from_address: "{{ smtp_from }}"
-        smtp:
-          existingSecret: ""
-          userKey: "user"
-          passwordKey: "password"
-      prometheus:
-        prometheusSpec:
-          additionalScrapeConfigs:
-          - job_name: 'http-request-total'
-            scrape_interval: 5s
-            scrape_timeout: 5s
-            static_configs:
-            - targets: ['http-request-total.default.svc.cluster.local:9121']
-          - job_name: 'uptime'
-            metrics_path: /probe
-            params:
-              module: [http_2xx]
-            static_configs:
-            - targets: "{{ SCRAPE_URLS }}"
-            relabel_configs:
-            - source_labels: [__address__]
-              target_label: __param_target
-            - source_labels: [__param_target]
-              target_label: instance
-            - target_label: __address__
-              replacement: blackbox-prometheus-blackbox-exporter.blackbox:9115
+    release_values: "{{ rendered_template | from_yaml }}"
+      # defaultRules:
+      #   rules:
+      #     alertManager: true
+      # alertmanager:
+      #   enabled: true
+      #   alertmanagerSpec:
+      #     storage: "{{ '{}' if volumeClaimTemplate is not defined else volumeClaimTemplate }}"
+      #   config:
+      #     global:
+      #       smtp_smarthost: '{{ smtp_host }}'
+      #       smtp_from: '{{ smtp_from }}'
+      #       smtp_auth_username: "{{ smtp_user }}"
+      #       smtp_auth_password: "{{ smtp_pass }}"
+      #       smtp_require_tls: false
+      # grafana:
+      #   adminPassword: "{{ grafana_password }}"
+      #   grafana.ini:
+      #     smtp:
+      #       enabled: true
+      #       host: "{{ smtp_host }}"
+      #       user: "{{ smtp_user }}"
+      #       password: "{{ smtp_pass }}"
+      #       from_address: "{{ smtp_from }}"
+      #   smtp:
+      #     existingSecret: ""
+      #     userKey: "user"
+      #     passwordKey: "password"
+      # prometheus:
+      #   storageSpec: "{{ '{}' if volumeClaimTemplate is not defined else volumeClaimTemplate }}"
+      #   prometheusSpec:
+      #     additionalScrapeConfigs:
+      #     - job_name: 'http-request-total'
+      #       scrape_interval: 5s
+      #       scrape_timeout: 5s
+      #       static_configs:
+      #       - targets: ['http-request-total.default.svc.cluster.local:9121']
+      #     - job_name: 'uptime'
+      #       metrics_path: /probe
+      #       params:
+      #         module: [http_2xx]
+      #       static_configs:
+      #       - targets: "{{ SCRAPE_URLS }}"
+      #       relabel_configs:
+      #       - source_labels: [__address__]
+      #         target_label: __param_target
+      #       - source_labels: [__param_target]
+      #         target_label: instance
+      #       - target_label: __address__
+      #         replacement: blackbox-prometheus-blackbox-exporter.blackbox:9115
       # additionalPrometheusRulesMap:
       #   uptime:
       #     groups:

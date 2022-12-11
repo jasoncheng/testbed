@@ -1,6 +1,7 @@
 ---
+
 - name: Add Control Plane
-  hosts: k8sM[0]
+  hosts: all
   gather_facts: false
   vars_prompt:
   - name: control_plane
@@ -8,13 +9,14 @@
     default: "{{ groups['k8sM'][0] }}"
     private: no
   - name: node_to_join_cp
-    prompt: Which node you want to join cluster as control-plan ?
+    prompt: Which node you want to join cluster as node (control-plan) ?
     private: no
   tasks:
   - name: Set tmp file name
     ansible.builtin.set_fact:
       tmp_file: /tmp/cp.tar.gz
       k8s_dir: /etc/kubernetes
+      is_join_cp: "{{ node_to_join_cp in groups['k8sApis'] }}"
 
   - name: Tar Control Plane files
     community.general.archive:
@@ -28,20 +30,30 @@
         - "{{ k8s_dir }}/pki/front-proxy-ca*"
         - "{{ k8s_dir }}/pki/etcd/ca*"
         - "{{ k8s_dir }}/admin.conf"
-    delegate_to: "{{ control_plane }}"
+    when: is_join_cp
+
+  - name: Delete /etc/kubernetes files
+    ansible.builtin.file:
+      path: "{{ item }}"
+      state: absent
+    with_items:
+      - "{{ k8s_dir }}/"
+    delegate_to: "{{ node_to_join_cp }}"
+    when: not is_join_cp
 
   - name: Download files from Control Plane
     ansible.builtin.fetch:
       src: "{{ tmp_file }}"
       dest: "{{ tmp_file }}"
       flat: true
-    delegate_to: "{{ control_plane }}"
+    when: is_join_cp
 
   - name: Copy file to new node
     ansible.builtin.copy:
       src: "{{ tmp_file }}"
       dest: "{{ tmp_file }}"
     delegate_to: "{{ node_to_join_cp }}"
+    when: is_join_cp
 
   - name: Unarchive to new node
     ansible.builtin.unarchive:
@@ -49,18 +61,22 @@
       dest: "{{ k8s_dir }}"
       mode: 0744
     delegate_to: "{{ node_to_join_cp }}"
+    when: is_join_cp
 
   - name: Get token
     ansible.builtin.command: kubeadm token create --print-join-command
     register: cmd
-    delegate_to: "{{ control_plane }}"
 
-  - name: Enable kubelet
-    ansible.builtin.command: systemctl enable kubelet.service
+  - name: Enable and stop kubelet
+    ansible.builtin.systemd:
+      name: kubelet
+      enabled: true
+      state: stopped
+    delegate_to: "{{ node_to_join_cp }}"
 
   - name: Set token
     ansible.builtin.set_fact:
-      join_command: "{{ cmd.stdout }} --control-plane"
+      join_command: "{{ cmd.stdout }} {{ '--control-plane' if is_join_cp else '' }}"
 
   - name: Show join command
     ansible.builtin.debug:

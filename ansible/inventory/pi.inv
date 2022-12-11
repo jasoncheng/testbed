@@ -7,40 +7,29 @@ pi4 ansible_host=10.33.27.128 ansible_ssh_user=root
 pi5 ansible_host=10.33.27.173 ansible_ssh_user=root
 
 [pi:children]
-ceph
 
 [pi]
 pi[0:5]
 
 [pi:vars]
-ansible_python_interpreter=/usr/bin/python3
 
 [k8s]
-pi[1:5]
+pi[0:5]
 
 [k8s:vars]
-ansible_python_interpreter=/usr/bin/python3
 
 [k8sM]
 pi1
 
 [k8sS]
+pi0
 pi[2:5]
 
 [k8sApis]
 pi1
-pi4
-pi5
+pi2
+pi3
 
 [HA]
 pi0
 pi5
-
-[ceph]
-pi1
-
-[ceph_adm]
-pi1
-
-[ceph_mon]
-pi1

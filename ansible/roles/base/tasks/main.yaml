@@ -2,7 +2,7 @@
   include_role:
     name: base
     tasks_from: pi4
-  when: is_centos7_pi
+  when: is_centos7_pi or is_centos9_pi
 
 - name: Upgrade all package
   include_role:
@@ -88,6 +88,7 @@
         name: "PATH",
         line: "$PATH:$JAVA_HOME/bin:$HADOOP_HOME/sbin:$HADOOP_HOME/bin:{{ HBASE_HOME }}/bin:$ZK_HOME/bin:$KAFKA_HOME/bin:/snap/bin",
       }
+  when: not is_centos9_pi
 
 - name: Config Remote SSH
   tags: ["base", "always"]

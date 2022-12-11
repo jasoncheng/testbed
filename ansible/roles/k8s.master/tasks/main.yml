@@ -6,6 +6,7 @@
   become: true
   become_user: root
   ansible.builtin.command: "kubeadm init --pod-network-cidr={{ K8S_CIDRBLOCK }} --ignore-preflight-errors=cri {{ extra_init_args }}"
+  # ansible.builtin.command: "kubeadm init --pod-network-cidr=172.18.0.0/16 --ignore-preflight-errors=cri {{ extra_init_args }}"
   args:
     chdir: $HOME
     creates: cluster_initialized.txt
@@ -31,10 +32,15 @@
 - name: Install Pod network
   become_user: "{{ K8S_USER }}"
   ansible.builtin.shell: |
-    kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
+    kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+    #kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
   args:
     chdir: $HOME
   when: "inventory_hostname in groups['k8sM']"
+  register: result
+  until: result.rc == 0
+  retries: 12
+  delay: 10
   ignore_errors: true
 
 - name: Get join token

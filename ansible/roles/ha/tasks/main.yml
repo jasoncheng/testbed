@@ -7,19 +7,37 @@
     - keepalived
     - psmisc
 
-- name: Gather facter
+- name: Gather fact
   vars:
     fetch_hosts: true
-  include_role:
+  ansible.builtin.include_role:
     name: base
     tasks_from: gatherfact
+
+- name: For HaProxy able to start (SELinux issue)
+  ansible.builtin.shell: setsebool -P haproxy_connect_any=1
+  when: is_centos9_pi
+
+- name: KeepAlived - Configure
+  ansible.builtin.template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+    lstrip_blocks: true
+    mode: 0644
+
+- name: KeepAlived - Start
+  ansible.builtin.systemd:
+    name: keepalived
+    enabled: true
+    state: restarted
+    daemon_reload: true
 
 - name: HAProxy - Configure
   ansible.builtin.template:
     src: haproxy.cfg.j2
     dest: /etc/haproxy/haproxy.cfg
     lstrip_blocks: true
-    mode: 0700
+    mode: 0644
 
 - name: HAProxy - Start
   ansible.builtin.systemd:
@@ -28,15 +46,3 @@
     state: restarted
     daemon_reload: true
 
-- name: KeepAlived - Configure
-  ansible.builtin.template:
-    src: keepalived.conf.j2
-    dest: /etc/keepalived/keepalived.conf
-    lstrip_blocks: true
-
-- name: KeepAlived - Start
-  ansible.builtin.systemd:
-    name: keepalived
-    enabled: true
-    state: restarted
-    daemon_reload: true

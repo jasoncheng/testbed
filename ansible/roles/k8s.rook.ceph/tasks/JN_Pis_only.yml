@@ -1,0 +1,96 @@
+# This is for our env only, please donot run this tasks
+- name: Provision our hard disk
+  ansible.builtin.set_fact:
+    partation1_size: "145G"
+
+- name: Pi1 only
+  shell: /bin/echo -e "g\n\n\n\nw" | fdisk /dev/sdb
+  # community.general.parted:
+  # device: /dev/sdb
+  # number: 1
+  # state: present
+  # label: gpt
+  
+- name: Pi1 HD
+  vars:
+    disk: /dev/sdb
+  ansible.builtin.shell: |
+    sgdisk --zap-all {{ disk }}
+    sync
+    partprobe {{ disk }}
+    sync
+    sync
+    sync
+    sgdisk -n 1:0:+{{ partation1_size }} {{ disk }}
+    partprobe {{ disk }}
+    partprobe {{ disk }}1
+    sync
+    sync
+    sync
+    dd if=/dev/zero of=/dev/{{ disk }}1 bs=1M count=100 oflag=direct,dsync
+    partprobe {{ disk }}
+    partprobe {{ disk }}1
+    sync
+    sync
+    sync
+  when: inventory_hostname == 'pi1'
+
+- name: Pi2 HD
+  vars:
+    disk: /dev/sda
+  ansible.builtin.shell: |
+    sgdisk --zap-all {{ disk }}
+    sync
+    partprobe {{ disk }}
+    sgdisk -n 1:0:+{{ partation1_size }} {{ disk }}
+    sgdisk -n 2:0:+{{ partation1_size }} {{ disk }}
+    partprobe {{ disk }}
+    partprobe {{ disk }}1
+    partprobe {{ disk }}2
+    sync
+    sync
+    sync
+    dd if=/dev/zero of=/dev/{{ disk }}1 bs=1M count=100 oflag=direct,dsync
+    dd if=/dev/zero of=/dev/{{ disk }}2 bs=1M count=100 oflag=direct,dsync
+    sync
+    sync
+    sync
+    partprobe {{ disk }}
+    partprobe {{ disk }}1
+    partprobe {{ disk }}2
+    sync
+    sync
+    sync
+  when: inventory_hostname == 'pi2'
+
+- name: Pi5 HD
+  vars:
+    disk: /dev/sdb
+  ansible.builtin.shell: |
+    sgdisk --zap-all {{ disk }}
+    sync
+    partprobe {{ disk }}
+    sgdisk -n 1:0:+{{ partation1_size }} {{ disk }}
+    sgdisk -n 2:0:+{{ partation1_size }} {{ disk }}
+    partprobe {{ disk }}
+    partprobe {{ disk }}1
+    partprobe {{ disk }}2
+    dd if=/dev/zero of=/dev/{{ disk }}1 bs=1M count=100 oflag=direct,dsync
+    dd if=/dev/zero of=/dev/{{ disk }}2 bs=1M count=100 oflag=direct,dsync
+    sync
+    sync
+    sync
+    partprobe {{ disk }}
+    partprobe {{ disk }}1
+    partprobe {{ disk }}2
+    sync
+    sync
+    sync
+  when: inventory_hostname == 'pi5'
+
+- name: Reboot now
+  become: true
+  ansible.builtin.reboot:
+    reboot_timeout: 300
+    connect_timeout: 5
+    test_command: whoami

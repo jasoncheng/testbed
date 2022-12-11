@@ -1,4 +1,8 @@
 ---
+
+- name: Initial env vars
+  ansible.builtin.import_playbook: env.yml
+
 - name: Provision HA
   hosts: HA
   gather_facts: false

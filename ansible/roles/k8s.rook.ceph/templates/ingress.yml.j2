@@ -3,6 +3,8 @@ kind: Ingress
 metadata:
   name: ceph-ingress
   namespace: rook-ceph
+  #annotations:
+  #  nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
 spec:
   ingressClassName: nginx
   rules:

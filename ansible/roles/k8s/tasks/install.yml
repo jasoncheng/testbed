@@ -26,16 +26,17 @@
   ignore_errors: true
 
 - name: Add conf for containerd
-  blockinfile:
+  ansible.builtin.blockinfile:
     path: "/etc/modules-load.d/containerd.conf"
     block: |
       overlay
       br_netfilter
   
-- name: Modprobe
-  ansible.builtin.shell: |
-    mobprobe overlay
-    modprobe br_netfilter
+- name: Modprobe overlay
+  ansible.builtin.command: modprobe overlay
+
+- name: Modprobe br_netfilter
+  ansible.builtin.command: modprobe br_netfilter
 
 - name: Set system configurations for k8s
   ansible.builtin.file:
@@ -53,18 +54,18 @@
 - name: Apply new settings
   ansible.builtin.command: sysctl --system
 
-# - name: install docker
-#   ansible.builtin.shell: |
-#     curl -fsSL https://get.docker.com -o get-docker.sh
-#     sh get-docker.sh
-#   when: is_cent_os
+- name: install docker
+  ansible.builtin.shell: |
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sh get-docker.sh
+  when: is_cent_os
 
 - name: Pi4 - enable and start docker
   ansible.builtin.systemd:
     name: docker
     enabled: true
     state: started
-  when: is_cent_os and is_pi4
+  when: is_cent_os and (is_pi4 or isis_centos9_pi)
 
 - name: config containerd
   ansible.builtin.shell: |
@@ -83,16 +84,16 @@
   when: not is_cent_os
 
 - name: RHEL import gpg key
-  shell: |
+  ansible.builtin.shell: |
     rpm --import https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
   when: is_cent_os
 
 - name: Repo for apt
-  set_fact: k8s_sourcelist="/etc/apt/sources.list.d/kubernetes.list"
+  ansible.builtin.set_fact: k8s_sourcelist="/etc/apt/sources.list.d/kubernetes.list"
   when: not is_cent_os
 
 - name: Create k8s repo file
-  file:
+  ansible.builtin.file:
     path: "{{ k8s_sourcelist }}"
     state: "touch"
   when: not is_cent_os
@@ -120,19 +121,29 @@
     update_cache: true
   when: is_ubuntu_os
 
+- name: Remove CNI
+  ansible.builtin.package:
+    name: "kubernetes-cni.aarch64"
+    state: absent
+
 - name: Install k8s
   ansible.builtin.package:
     name: "{{ packages }}"
-    state: latest
+    state: present
+    # state: latest
   vars:
     packages:
     - kubelet
     - kubeadm
     - kubectl
 
+- name: Reset kubeadm
+  ansible.builtin.command: kubeadm reset --force
+
 - name: Enable kubelet service
   ansible.builtin.systemd:
     name: kubelet
+    daemon_reload: true
     enabled: true
     state: started
 

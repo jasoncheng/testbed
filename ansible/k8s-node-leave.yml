@@ -1,7 +1,7 @@
 ---
 - name: Leave k8s
   gather_facts: false
-  hosts: k8sM[0]
+  hosts: all
   vars_prompt:
   - name: control_plane
     prompt: What is your control-plane?
@@ -38,13 +38,17 @@
     failed_when: false
     with_items: "{{ groups['k8s'] }}"
     when: item != node_to_leave
+    delegate_to: "{{ control_plane }}"
     
   - name: Drain
     ansible.builtin.command:
       cmd: kubectl drain {{ node_to_leave }} --force --grace-period=10 --ignore-daemonsets --delete-emptydir-data
     register: result
     failed_when: false
+    async: 60
+    ignore_errors: true
     changed_when: result.rc == 0
+    delegate_to: "{{ control_plane }}"
   
   - name: Delete node
     ansible.builtin.command:
@@ -52,6 +56,7 @@
     register: result
     failed_when: false
     changed_when: result.rc == 0
+    delegate_to: "{{ control_plane }}"
 
   - name: Reset 
     ansible.builtin.command: kubeadm reset --force
@@ -61,13 +66,17 @@
     ansible.builtin.command: kubectl uncordon {{ node_to_leave }}
     failed_when: false
     with_items: "{{ groups['k8s'] }}"
+    delegate_to: "{{ control_plane }}"
     when: item != node_to_leave
 
-  - name: Delete kube config
+  - name: Delete files
     ansible.builtin.file:
       state: absent
-      path: ~/.kube/config
+      path: "{{ item }}"
     delegate_to: "{{ node_to_leave }}"
+    with_items:
+      - ~/.kube/config
+      - /var/lib/etcd
     
   - name: Show nodes
     ansible.builtin.include_role:

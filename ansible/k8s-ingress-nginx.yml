@@ -1,0 +1,10 @@
+---
+
+- name: Env
+  ansible.builtin.import_playbook: env.yml
+
+- name: Ingress Nginx
+  hosts: k8sM
+  gather_facts: false
+  roles:
+    - { role: k8s.ingress.nginx, tags: ['ingress-nginx'] }
