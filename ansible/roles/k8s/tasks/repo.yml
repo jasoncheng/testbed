@@ -1,0 +1,17 @@
+- name: RHEL add k8s repo
+  vars:
+    pkgs:
+      - kubectl*
+      - kubeadm*
+      - kubelet*
+      - kubernetes-*
+  ansible.builtin.yum_repository:
+    name: kubernetes
+    gpgcheck: true
+    repo_gpgcheck: false
+    description: for kubernetes
+    enabled: true
+    file: k8s_repo
+    exclude: "{{ pkgs if action is defined and action == 'lock' else [] }}"
+    baseurl: "https://packages.cloud.google.com/yum/repos/kubernetes-el7-{{ 'aarch64' if is_pi4 else 'x86_64' }}"
+  when: is_cent_os

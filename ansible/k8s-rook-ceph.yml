@@ -1,4 +1,7 @@
 ---
+- name: Set env
+  ansible.builtin.import_playbook: env.yml
+
 - name: Rook Ceph
   hosts: k8sM
   gather_facts: false

@@ -4,25 +4,25 @@
 # Refs: https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#control-plane-node-isolation
 
 # use haproxy instead --set controller.hostNetwork=true
-# - name: Add IngressNginx repo
-#   kubernetes.core.helm_repository:
-#     name: ingress-nginx
-#     repo_url: "https://kubernetes.github.io/ingress-nginx"
+- name: Add IngressNginx repo
+  kubernetes.core.helm_repository:
+    name: ingress-nginx
+    repo_url: "https://kubernetes.github.io/ingress-nginx"
 
-# - name: Install IngressNginx
-#   kubernetes.core.helm:
-#     create_namespace: true
-#     release_name: ingress-nginx
-#     release_namespace: ingress-nginx
-#     update_repo_cache: true
-#     chart_ref: ingress-nginx/ingress-nginx
-#     release_values:
-#       controller:
-#         kind: DaemonSet
-#         service:
-#           nodePorts:
-#             http: "{{ INGRESS_NGINX_HTTP_PORT }}"
-#             https: "{{ INGRESS_NGINX_HTTPS_PORT }}"
+- name: Install IngressNginx
+  kubernetes.core.helm:
+    create_namespace: true
+    release_name: ingress-nginx
+    release_namespace: ingress-nginx
+    update_repo_cache: true
+    chart_ref: ingress-nginx/ingress-nginx
+    release_values:
+      controller:
+        kind: DaemonSet
+        service:
+          nodePorts:
+            http: "{{ INGRESS_NGINX_HTTP_PORT }}"
+            https: "{{ INGRESS_NGINX_HTTPS_PORT }}"
 
 - name: Run taint NoSchedule-, plz don't do it on production, could have security issue
   ansible.builtin.command: "kubectl taint node {{ item }} node-role.kubernetes.io/control-plane:NoSchedule-"
@@ -32,17 +32,19 @@
   with_items: "{{ groups['k8sApis'] }}"
   when: inventory_hostname != groups['k8sM'][0]
 
-- name: Ingress Nginx Install
-  ansible.builtin.command: |
-    helm upgrade --install ingress-nginx ingress-nginx \
-    --repo https://kubernetes.github.io/ingress-nginx \
-    --namespace ingress-nginx --create-namespace \
-    --set controller.kind=DaemonSet \
-    --set controller.service.nodePorts.http={{ INGRESS_NGINX_HTTP_PORT }} \
-    --set controller.service.nodePorts.https={{ INGRESS_NGINX_HTTPS_PORT }}
+# - name: Ingress Nginx Install
+#   ansible.builtin.command: |
+#     helm upgrade --install ingress-nginx ingress-nginx \
+#     --repo https://kubernetes.github.io/ingress-nginx \
+#     --namespace ingress-nginx --create-namespace \
+#     --set controller.kind=DaemonSet \
+#     --set controller.service.nodePorts.http={{ INGRESS_NGINX_HTTP_PORT }} \
+#     --set controller.service.nodePorts.https={{ INGRESS_NGINX_HTTPS_PORT }}
 
 - name: Remove ValidatingWebhookConfiguration
   ansible.builtin.command: kubectl delete -A ValidatingWebhookConfiguration ingress-nginx-admission
+  register: result
+  failed_when: result.rc != 0 and 'not found' not in result.stderr
   when: cluster_size | int > 2
 
 # - name: Warning message

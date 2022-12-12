@@ -18,7 +18,7 @@
     - { "owner": "{{ K8S_USER }}", "path": "/home/{{ K8S_USER }}/.kube" }
 
 - name: Pi4 config
-  when: is_pi4 and is_cent_os
+  when: is_pi4
   include_role:
     name: k8s
     tasks_from: pi4

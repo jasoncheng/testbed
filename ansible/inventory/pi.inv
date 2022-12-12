@@ -1,10 +1,10 @@
 [nodes]
-pi0 ansible_host=10.33.27.182 ansible_ssh_user=root
-pi1 ansible_host=10.33.27.183 ansible_ssh_user=root
-pi2 ansible_host=10.33.27.137 ansible_ssh_user=root
-pi3 ansible_host=10.33.27.191 ansible_ssh_user=root
-pi4 ansible_host=10.33.27.128 ansible_ssh_user=root
-pi5 ansible_host=10.33.27.173 ansible_ssh_user=root
+pi0 ansible_host=10.33.27.184 ansible_ssh_user=ubuntu
+pi1 ansible_host=10.33.27.186 ansible_ssh_user=ubuntu
+pi2 ansible_host=10.33.27.138 ansible_ssh_user=ubuntu
+pi3 ansible_host=10.33.27.193 ansible_ssh_user=ubuntu
+pi4 ansible_host=10.33.27.129 ansible_ssh_user=ubuntu
+pi5 ansible_host=10.33.27.174 ansible_ssh_user=ubuntu
 
 [pi:children]
 
@@ -27,7 +27,6 @@ pi[2:5]
 
 [k8sApis]
 pi1
-pi2
 pi3
 
 [HA]

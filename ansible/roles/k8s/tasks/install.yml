@@ -54,12 +54,6 @@
 - name: Apply new settings
   ansible.builtin.command: sysctl --system
 
-- name: install docker
-  ansible.builtin.shell: |
-    curl -fsSL https://get.docker.com -o get-docker.sh
-    sh get-docker.sh
-  when: is_cent_os
-
 - name: Pi4 - enable and start docker
   ansible.builtin.systemd:
     name: docker
@@ -106,6 +100,11 @@
     description: for kubernetes
     enabled: yes
     file: k8s_repo
+    # exclude:
+    #   - kubectl*
+    #   - kubeadm*
+    #   - kubelet*
+    #   - kubernetes-*
     baseurl: "https://packages.cloud.google.com/yum/repos/kubernetes-el7-{{ 'aarch64' if is_pi4 else 'x86_64' }}"
   when: is_cent_os
 
@@ -133,12 +132,16 @@
     # state: latest
   vars:
     packages:
-    - kubelet
-    - kubeadm
-    - kubectl
+      # - kubelet-1.25.0-0.aarch64
+      # - kubeadm-1.25.0-0.aarch64
+      # - kubectl-1.25.0-0.aarch64
+      # - kubernetes-cni-0.8.7-0.aarch64
+      - kubelet
+      - kubeadm
+      - kubectl
 
-- name: Reset kubeadm
-  ansible.builtin.command: kubeadm reset --force
+# - name: Reset kubeadm
+#   ansible.builtin.command: kubeadm reset --force
 
 - name: Enable kubelet service
   ansible.builtin.systemd:

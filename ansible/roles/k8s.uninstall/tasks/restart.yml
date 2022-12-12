@@ -1,0 +1,7 @@
+- name: Restart service
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: restarted
+  with_items:
+    - containerd
+    - docker

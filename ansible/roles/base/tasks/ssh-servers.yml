@@ -4,7 +4,7 @@
 
 - name: Set fact if os user is not root
   ansible.builtin.set_fact:
-    grant_users: grant_users+[OS_USER]
+    grant_users: "{{ grant_users + [OS_USER] }}"
   when: OS_USER != "root"
 
 - name: Permitrootlogin & PubkeyAuthentication
@@ -26,6 +26,7 @@
   ansible.builtin.file:
     path: "~/.ssh"
     state: directory
+    mode: 0744
   with_items: "{{ grant_users }}"
 
 - name: Config - create .ssh/config
@@ -33,6 +34,7 @@
   ansible.builtin.file:
     path: "~/.ssh/config"
     state: touch
+    mode: 0644
   with_items: "{{ grant_users }}"
 
 - name: Disable ssh hostkey checking
@@ -56,7 +58,7 @@
         StrictHostKeyChecking no
         UserKnownHostsFile=/dev/null
     marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item }}"
-    backup: true
+    # backup: true
   with_items: "{{ grant_users }}"
 
 - name: Create ssh directory

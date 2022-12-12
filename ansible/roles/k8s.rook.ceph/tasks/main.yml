@@ -6,9 +6,14 @@
   ansible.builtin.command: modprobe rbd
   when: not is_centos7_pi
 
-- name: Modprobe ceph 
+- name: Modprobe ceph
   ansible.builtin.command: modprobe ceph
   when: not is_centos7_pi
+
+- name: If require reboot
+  ansible.builtin.include_role:
+    name: base
+    tasks_from: reboot
 
 - name: Add repo
   kubernetes.core.helm_repository:
@@ -16,7 +21,7 @@
     repo_url: https://charts.rook.io/release
   when:
     - inventory_hostname in groups['k8sM']
-    - action != "absent"
+    - action != 'absent'
 
 # Refs: https://github.com/rook/rook/blob/release-1.9/deploy/charts/rook-ceph/values.yaml
 # ceph-volume lvm zap /dev/sda
@@ -88,8 +93,8 @@
           allowMultiplePerNode: true
         dashboard:
           enabled: true
-          ssl: false
-          port: "{{ INGRESS_NGINX_HTTP_PORT }}"
+          ssl: true
+          port: 8443
         # crashCollector:
         #   disable: true
         resources: null
@@ -107,7 +112,7 @@
   ansible.builtin.include_role:
     name: k8s.rook.ceph
     tasks_from: ingress
-  when: action != "absent"
+  when: action != 'absent'
 
 - name: Fetch admin password
   ansible.builtin.shell: |
@@ -116,7 +121,7 @@
   until: result.rc == 0 and result.stdout != ""
   retries: 18
   delay: 10
-  when: action != "absent"
+  when: action != 'absent'
 
 - name: Show dashboard info
   ansible.builtin.debug:
@@ -124,13 +129,24 @@
       - "Ceph Portal: https://{{ DOMAINS['ceph'] }}"
       - "user: admin"
       - "pass: {{ result.stdout }}"
-  when: action != "absent"
+  when: action != 'absent'
+
+- name: Enable module
+  ansible.builtin.include_role:
+    name: k8s.rook.ceph
+    tasks_from: enableRook
 
 # Misc
 # ceph mgr module enable rook
 # ceph orch set backend rook
 
 # https://www.cnblogs.com/gzxbkk/p/7737467.html
+
+# sgdisk -n 1:0:+500G /dev/sda -t 1:45b0969e-9b03-4f30-b4c6-b4b80ceff106 -c 1:"ceph journal"
+# sgdisk -n 2:0:+500G /dev/sda -t 2:4fbd7e29-9d25-41b8-afd0-062c0ceff05d -c 2:"ceph data"
+# dd if=/dev/zero of=/dev/sda1 bs=1M count=100 oflag=direct,dsync
+# dd if=/dev/zero of=/dev/sda2 bs=1M count=100 oflag=direct,dsync
+
 # sgdisk -n 1:0:+20G /dev/sda -t 1:45b0969e-9b03-4f30-b4c6-b4b80ceff106 -c 1:"ceph journal"
 # sgdisk -n 2:0:+20G /dev/sda -t 2:45b0969e-9b03-4f30-b4c6-b4b80ceff106 -c 2:"ceph journal"
 # sgdisk -n 3:0:+800G /dev/sda -t 3:4fbd7e29-9d25-41b8-afd0-062c0ceff05d -c 3:"ceph data"

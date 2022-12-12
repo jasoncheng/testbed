@@ -23,7 +23,7 @@
   ignore_errors: true
   failed_when: false
 
-- name: Install package for CentOS Stream 9 w/ Pi4
+- name: Install package for Pi4
   ansible.builtin.package:
     name: "{{ item }}"
     state: latest
@@ -33,7 +33,7 @@
   - iotop
   ignore_errors: true
   failed_when: false
-  when: is_centos9_pi
+  when: is_centos9_pi or is_ubuntu_os
 
 - name: Pip3 packages for pi4 only
   ansible.builtin.pip:

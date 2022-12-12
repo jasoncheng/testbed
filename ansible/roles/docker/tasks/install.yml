@@ -1,7 +1,25 @@
-- name: Install Docker
-  shell: |
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-    echo "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable" > /etc/apt/sources.list.d/docker-ce.list
-    apt update
-    apt install -qq -y docker-ce docker-ce-cli containerd.io
-  when: is_ubuntu_os is defined and is_ubuntu_os
+- name: install docker
+  ansible.builtin.shell: |
+    curl -fsSL https://get.docker.com -o get-docker.sh
+    sh get-docker.sh
+
+- name: Add docker group
+  ansible.builtin.group:
+    name: "docker"
+    state: present
+
+- name: Add ubuntu to docker group
+  ansible.builtin.user:
+    name: "ubuntu"
+    groups: ["docker"]
+    append: yes
+  ignore_errors: true
+  when: OS_USER == "ubuntu"
+
+- name: Add  {{ K8S_USER }}  to docker group
+  ansible.builtin.user:
+    name: "{{ K8S_USER }}"
+    groups: ["docker"]
+    append: yes
+  ignore_errors: true
+  when: K8S_USER != OS_USER

@@ -24,6 +24,7 @@
 
 - name: Deploy kube config to all nodes
   hosts: all
+  tags: ['config']
   gather_facts: false
   tasks:
     - name: Deploy

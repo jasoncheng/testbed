@@ -6,21 +6,10 @@
     - kubelet
     - kubeadm
     - kubectl
+    - kubernetes-cni
   tags: ['pkg']
 
 - name: Autoremove
   ansible.builtin.command: yum autoremove -y
   when: is_cent_os
   tags: ['pkg']
-
-- name: Delete Content and Directory
-  ansible.builtin.file:
-    path: "{{ item }}"
-    force: true
-    state: absent
-  with_items:
-    - /var/lib/etcd
-    - /var/lib/kubelet
-    - /etc/cni/net.d
-    - /opt/cni
-    - /etc/cni

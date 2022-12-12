@@ -3,17 +3,17 @@
     name: k8s.monitoring
     tasks_from: install_prometheus
 
-- name: Loki
-  include_role:
-    name: k8s.monitoring
-    tasks_from: install_loki
+# - name: Loki
+#   include_role:
+#     name: k8s.monitoring
+#     tasks_from: install_loki
 
-- name: Keda
-  include_role:
-    name: k8s.monitoring
-    tasks_from: install_keda
+# - name: Keda
+#   include_role:
+#     name: k8s.monitoring
+#     tasks_from: install_keda
 
-- name: Blackbox
-  include_role:
-    name: k8s.monitoring
-    tasks_from: install_blackbox
+# - name: Blackbox
+#   include_role:
+#     name: k8s.monitoring
+#     tasks_from: install_blackbox

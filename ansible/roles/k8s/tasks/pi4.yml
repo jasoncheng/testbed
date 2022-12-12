@@ -3,11 +3,13 @@
     state: stopped
     name: firewalld
     enabled: no
+  when: is_cent_os
 
 - name: Turn off selinux temporary
   ansible.builtin.command: setenforce 0
   no_log: true
   failed_when: false
+  when: is_cent_os
 
 - name: Turn off selinux forever
   ansible.builtin.lineinfile:
@@ -15,9 +17,10 @@
     regexp: '^SELINUX=(.*)$'
     line: 'SELINUX=disabled'
     backup: yes
+  when: is_cent_os
 
 - name: Pi4 - cgroup read cmdline.txt
-  ansible.builtin.command: cat /boot/cmdline.txt
+  ansible.builtin.command: "cat /boot{{ '/firmware' if is_ubuntu_os else '' }}/cmdline.txt"
   register: cmdline
 
 - name: Pi4 - cgroup split as list
@@ -53,13 +56,13 @@
 
 - name: Pi4 - set cgroup
   ansible.builtin.lineinfile:
-    path: "/boot/cmdline.txt"
+    path: "/boot{{ '/firmware' if is_ubuntu_os else '' }}/cmdline.txt"
     regexp: '{{ list_cmds[0] }}'
     line: "{{ cmdline }}"
     mode: 0755
   register: chg_cgroup
 
-- name: Reboot if Pi4 /boot/cmdline.txt changed
+- name: Reboot if Pi4 /cmdline.txt changed
   ansible.builtin.reboot:
     msg: "Reboot initiated."
     reboot_timeout: 300

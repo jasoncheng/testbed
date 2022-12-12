@@ -3,8 +3,8 @@ kind: Ingress
 metadata:
   name: ceph-ingress
   namespace: rook-ceph
-  #annotations:
-  #  nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+  annotations:
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
 spec:
   ingressClassName: nginx
   rules:
@@ -17,4 +17,4 @@ spec:
           service:
             name: rook-ceph-mgr-dashboard
             port:
-              number: {{ INGRESS_NGINX_HTTP_PORT }}
+              number: 8443

@@ -18,3 +18,8 @@
   ansible.builtin.include_role:
     name: k8s.uninstall
     tasks_from: config
+
+- name: Restart service
+  ansible.builtin.include_role:
+    name: k8s.uninstall
+    tasks_from: restart

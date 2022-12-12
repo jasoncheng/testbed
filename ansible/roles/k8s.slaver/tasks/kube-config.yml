@@ -2,6 +2,16 @@
   ansible.builtin.set_fact:
     local_file: "/tmp/kube_config_for_nodes"
 
+- name: Create .kube directory if not exists
+  become_user: "{{ item }}"
+  ansible.builtin.file:
+    path: "~/.kube"
+    state: directory
+    mode: 0755
+  with_items:
+    - "root"
+    - "{{ K8S_USER }}"
+
 - name: Download .kube/config
   ansible.builtin.fetch:
     src: "{{ k8s_config_file }}"

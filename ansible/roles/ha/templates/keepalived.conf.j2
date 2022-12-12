@@ -1,23 +1,27 @@
+#jinja2: trim_blocks: True, lstrip_blocks: True
 global_defs {
     notification_email {
     }
-    router_id LVS_DEVEL
+    router_id {{ inventory_hostname }}
     vrrp_skip_check_adv_addr
     vrrp_garp_interval 0
     vrrp_gna_interval 0
   }
      
   vrrp_script chk_haproxy {
-    script "killall -0 haproxy"
+    script "/usr/bin/killall -0 haproxy"
     interval 2
     weight 2
   }
      
   vrrp_instance haproxy-vip {
-    state BACKUP
-    priority 100
+    state {% if inventory_hostname == "pi0" %}MASTER{% else %}BACKUP{% endif %}
+
+    priority {% if inventory_hostname == "pi0" %}100{% else %}90{% endif %}
+
+    virtual_router_id 2{{ inventory_hostname | replace('pi', '') }}
+
     interface eth0
-    virtual_router_id 60
     advert_int 1
     authentication {
       auth_type PASS

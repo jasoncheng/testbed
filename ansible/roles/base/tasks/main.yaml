@@ -1,11 +1,11 @@
 - name: If pi4 do something...
-  include_role:
+  ansible.builtin.include_role:
     name: base
     tasks_from: pi4
   when: is_centos7_pi or is_centos9_pi
 
 - name: Upgrade all package
-  include_role:
+  ansible.builtin.include_role:
     name: base
     tasks_from: pkg-upgrade
 
@@ -29,7 +29,7 @@
   - snapd
   - openjdk-11-jdk
   - apt-transport-https
-  - docker.io
+  - hey
   when: is_ubuntu_os
 
 - name: Install package CentOS only
@@ -51,9 +51,14 @@
     - lxml
   when: not is_centos7_pi
 
+- name: Docker
+  ansible.builtin.include_role:
+    name: docker
+    tasks_from: install
+
 - name: Hostname
   tags: ["base", "always"]
-  include_role:
+  ansible.builtin.include_role:
     name: base
     tasks_from: hosts.yml
 
@@ -63,69 +68,48 @@
     path: "{{ ENV_FILE_SOURCE }}"
     state: touch
 
-- name: Set {{ ENV_FILE_SOURCE }} for all user
-  ansible.builtin.blockinfile:
-    insertafter: EOF
-    dest: "{{ ENV_FILE_SOURCE }}"
-    block: |
-      export {{ item.name }}="{{ item.line }}"
-    marker: "\n# {mark} Ansible manage block {{ item.name }}"
-    backup: true
-  with_items:
-    - { name: "JAVA_HOME", line: "{{ JAVA_HOME }}" }
-    - { name: "HADOOP_HOME", line: "{{ HADOOP_HOME }}" }
-    - { name: "HBASE_HOME", line: "{{ HBASE_HOME }}" }
-    - { name: "ZK_HOME", line: "{{ ZK_HOME }}" }
-    - { name: "KAFKA_HOME", line: "{{ KAFKA_HOME }}" }
-    - { name: "HDFS_NAMENODE_USER", line: "root" }
-    - { name: "HDFS_DATANODE_USER", line: "root" }
-    - { name: "HDFS_SECONDARYNAMENODE_USER", line: "root" }
-    - { name: "YARN_RESOURCEMANAGER_USER", line: "root" }
-    - { name: "YARN_NODEMANAGER_USER", line: "root" }
-    - { name: "HBASE_MANAGES_ZK", line: "{{ HBASE_MANAGES_ZK }}" }
-    - { name: "HADOOP_CLASSPATH", line: "${JAVA_HOME}/lib/tools.jar" }
-    - {
-        name: "PATH",
-        line: "$PATH:$JAVA_HOME/bin:$HADOOP_HOME/sbin:$HADOOP_HOME/bin:{{ HBASE_HOME }}/bin:$ZK_HOME/bin:$KAFKA_HOME/bin:/snap/bin",
-      }
-  when: not is_centos9_pi
+# - name: Set {{ ENV_FILE_SOURCE }} for all user
+#   ansible.builtin.blockinfile:
+#     insertafter: EOF
+#     dest: "{{ ENV_FILE_SOURCE }}"
+#     block: |
+#       export {{ item.name }}="{{ item.line }}"
+#     marker: "\n# {mark} Ansible manage block {{ item.name }}"
+#     # backup: true
+#   with_items:
+#     - { name: "JAVA_HOME", line: "{{ JAVA_HOME }}" }
+#     - { name: "HADOOP_HOME", line: "{{ HADOOP_HOME }}" }
+#     - { name: "HBASE_HOME", line: "{{ HBASE_HOME }}" }
+#     - { name: "ZK_HOME", line: "{{ ZK_HOME }}" }
+#     - { name: "KAFKA_HOME", line: "{{ KAFKA_HOME }}" }
+#     - { name: "HDFS_NAMENODE_USER", line: "root" }
+#     - { name: "HDFS_DATANODE_USER", line: "root" }
+#     - { name: "HDFS_SECONDARYNAMENODE_USER", line: "root" }
+#     - { name: "YARN_RESOURCEMANAGER_USER", line: "root" }
+#     - { name: "YARN_NODEMANAGER_USER", line: "root" }
+#     - { name: "HBASE_MANAGES_ZK", line: "{{ HBASE_MANAGES_ZK }}" }
+#     - { name: "HADOOP_CLASSPATH", line: "${JAVA_HOME}/lib/tools.jar" }
+#     - {
+#         name: "PATH",
+#         line: "$PATH:$JAVA_HOME/bin:$HADOOP_HOME/sbin:$HADOOP_HOME/bin:{{ HBASE_HOME }}/bin:$ZK_HOME/bin:$KAFKA_HOME/bin:/snap/bin",
+#       }
+#   when: not is_centos9_pi
 
 - name: Config Remote SSH
   tags: ["base", "always"]
-  include_role:
+  ansible.builtin.include_role:
     name: base
     tasks_from: ssh-servers.yml
 
 - name: Config Local SSH
   when: inventory_hostname == groups['nodes'][0]
   tags: ["base", "always"]
-  include_role:
+  ansible.builtin.include_role:
     name: base
     tasks_from: ssh-local.yml
 
-- name: Add docker group
-  ansible.builtin.group:
-    name: "docker"
-    state: present
-
-- name: Add ubuntu to docker group
-  ansible.builtin.user:
-    name: "ubuntu"
-    groups: ["docker"]
-    append: yes
-  ignore_errors: true
-  when: OS_USER == "ubuntu"
-
-- name: Add  {{ K8S_USER }}  to docker group
-  ansible.builtin.user:
-    name: "{{ K8S_USER }}"
-    groups: ["docker"]
-    append: yes
-  ignore_errors: true
-  when: K8S_USER != OS_USER
-
 - name: Reboot
-  include_role:
+  ansible.builtin.include_role:
     name: base
     tasks_from: reboot.yml
 

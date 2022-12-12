@@ -1,0 +1,10 @@
+- name: Rook tools pod name
+  ansible.builtin.shell: kubectl get po -n rook-ceph -l app=rook-ceph-tools -o=name
+  register: result
+
+- name: Ceph module enable rook
+  ansible.builtin.shell: |
+    kubectl exec -it -n rook-ceph {{ result.stdout }} -- {{ item }}
+  with_items:
+    - ceph mgr module enable rook
+    - ceph orch set backend rook

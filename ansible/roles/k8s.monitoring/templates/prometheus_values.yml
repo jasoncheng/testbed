@@ -15,12 +15,15 @@ alertmanager:
             requests:
               storage: 7Gi
   {% endif %}
-  global:
-    smtp_smarthost: '{{ smtp_host }}'
-    smtp_from: '{{ smtp_from }}'
-    smtp_auth_username: "{{ smtp_user }}"
-    smtp_auth_password: "{{ smtp_pass }}"
-    smtp_require_tls: false
+  {% if smtp_host is defined %}
+  config:
+    global:
+      smtp_smarthost: '{{ smtp_host }}'
+      smtp_from: '{{ smtp_from }}'
+      smtp_auth_username: "{{ smtp_user }}"
+      smtp_auth_password: "{{ smtp_pass }}"
+      smtp_require_tls: false
+  {% endif %}
 grafana:
   adminPassword: "{{ grafana_password }}"
   grafana.ini:
@@ -36,31 +39,30 @@ grafana:
     passwordKey: "password"
     
 {% if CEPH_STORAGE_CLASS is defined %}
-thanosRulerSpec:
-  volumeClaimTemplate:
-    spec:
-      storageClassName: {{ CEPH_STORAGE_CLASS }}
-      accessModes: ["ReadWriteOnce"]
-      resources:
-        requests:
-          storage: 8Gi
+thanosRuler:
+  thanosRulerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: {{ CEPH_STORAGE_CLASS }}
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 8Gi
 {% endif %}
 
 prometheus:
-  {% if CEPH_STORAGE_CLASS is defined %}
-  persistentVolume:
-    storageClass: {{ CEPH_STORAGE_CLASS }}
-    subPath: "/prome"
-  storageSpec:
-    volumeClaimTemplate:
-      spec:
-        storageClassName: {{ CEPH_STORAGE_CLASS }}
-        accessModes: ["ReadWriteOnce"]
-        resources:
-          requests:
-            storage: 6Gi
-  {% endif %}
   prometheusSpec:
+    {% if CEPH_STORAGE_CLASS is defined %}
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: {{ CEPH_STORAGE_CLASS }}
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 12Gi
+    {% endif %}
     additionalScrapeConfigs:
     - job_name: 'http-request-total'
       scrape_interval: 5s
