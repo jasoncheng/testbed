@@ -72,8 +72,9 @@ frontend ingress-nginx-http
 frontend ingress-nginx-https
     mode tcp
     bind *:443
-    use_backend k8s if { req.hdr(host) -i k8s }
-    use_backend ceph if { req.hdr(host) -i ceph }
+    default_backend https
+    #use_backend k8s if { req.hdr(host) -i k8s }
+    #use_backend ceph if { req.hdr(host) -i ceph }
 
 #---------------------------------------------------------------------
 # round robin balancing between the various backends
@@ -96,7 +97,7 @@ backend ingress-nginx-backend
     server {{ host }} {{ hostvars[host]['ansible_default_ipv4']['address'] }}:{{ INGRESS_NGINX_HTTP_PORT }} check
     {% endfor %}
 
-backend k8s
+backend https
     mode tcp
     balance roundrobin
     stick-table type ip size 200k expire 30m
@@ -105,13 +106,13 @@ backend k8s
     server {{ host }} {{ hostvars[host]['ansible_default_ipv4']['address'] }}:{{ INGRESS_NGINX_HTTPS_PORT }} check
     {% endfor %}
 
-backend ceph
-    mode tcp
-    balance roundrobin
-    stick-table type ip size 200k expire 30m
-    stick on src
-    {% for host in groups['k8s'] %}
-    server {{ host }} {{ hostvars[host]['ansible_default_ipv4']['address'] }}:8443 check
-    {% endfor %}
+#backend ceph
+#    mode tcp
+#    balance roundrobin
+#    stick-table type ip size 200k expire 30m
+#    stick on src
+#    {% for host in groups['k8s'] %}
+#    server {{ host }} {{ hostvars[host]['ansible_default_ipv4']['address'] }}:8443 check
+#    {% endfor %}
 
 

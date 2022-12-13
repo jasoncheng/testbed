@@ -1,8 +1,3 @@
-- name: Prometheus - Load Scrape Urls from additionalScrapeUrls.yml
-  ansible.builtin.include_vars:
-    dir: vars
-    files_matching: additionalScrapeUrls.yml
-
 - name: Prometheus - Add repo
   kubernetes.core.helm_repository:
     name: prometheus-community

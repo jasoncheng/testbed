@@ -18,7 +18,7 @@
   ignore_errors: true
   when: is_centos7_pi
 
-- debug: msg="{{ result.stdout_lines }}"
+- debug: msg="{{ result.stdout }}"
 
 - name: "Check http-requst-total pod should scaleOut"
   ansible.builtin.shell: "{{ cmd }}"

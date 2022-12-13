@@ -15,8 +15,7 @@
 
 # TODO
 - name: Copy admin.conf to user's kube config
-  become_user: root
-  become: true
+  become_user: "root"
   ansible.builtin.copy:
     src: /etc/kubernetes/admin.conf
     dest: "{{ item.path }}"
@@ -24,9 +23,10 @@
     owner: "{{ item.owner }}"
     mode: 0600
   register: result
+  when: K8S_USER != 'root' or '/home/root' not in item.path
   with_items:
   - { "owner": "root", "path": "/root/.kube/config" }
-  - { "owner": "{{ K8S_USER }}", "path": "$HOME/.kube/config" }
+  - { "owner": "{{ K8S_USER }}", "path": "/home/{{ K8S_USER }}/.kube/config" }
 
 - name: Install Pod network
   become_user: "{{ K8S_USER }}"
