@@ -24,7 +24,7 @@ hope this automatic ansible tool help anyone else to learn more about devops.<br
     150GB Unknow brand (Over ten years ago)
 
 <sup>
-   I cannot afford more hard disk for now, so collect disk from others; I would recommend buy new one instead of waste your time on troubleshooting... But debugging more trouble, let us can handle more situation earily, isn't it.......</sup> 😂
+   I cannot afford more hard disk for now, so collect disk from others; I would recommend buy new one instead of waste your time on troubleshooting... But debugging more issues, let us can handle more situation earily, isn't it.......</sup> 😂
 <br><br>
 
 ### Nodes Information
@@ -38,7 +38,7 @@ hope this automatic ansible tool help anyone else to learn more about devops.<br
 | 10.33.27.129 | pi4 | node |
 | 10.33.27.174 | pi5 | node |✔️
 
-&nbsp;&nbsp;Keep in mind, best pratice and better performance is **2*N + 1** nodes, but...but...we just using all our Pi 😍
+&nbsp;&nbsp;Keep in mind, best pratice and better performance is **2*N + 1** nodes, but...but...we just wanna use all of our Pi 😍.
 <br><br>
 
 ### Goal 
