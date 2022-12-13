@@ -13,6 +13,9 @@ hope this automatic ansible tool help anyone else to learn more about devops.<br
 
 &nbsp;&nbsp; [Ubuntu 20.04](https://ubuntu.com/) ([why?](https://docs.ceph.com/en/quincy/start/os-recommendations/)); *Use [Pi-Imager](https://www.raspberrypi.com/software/) to install ubuntu to all your sdcard first.*
 
+
+&nbsp;&nbsp; *I also test on CentOS 7 and CentOS Stream 9, even though i installed everything but still look like many kubernetes's issues on Raspberry Pi require to be resolve, in current stage, all i want is focus on k8s, this is another reason.*
+
 ### SDCard for OS
 
 &nbsp;&nbsp; [SanDisk microSD C10](https://www.amazon.com/SanDisk-128GB-Extreme-microSD-Adapter/dp/B07FCMKK5X) x 6
