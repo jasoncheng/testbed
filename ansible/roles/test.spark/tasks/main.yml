@@ -1,5 +1,5 @@
 ---
-- set_fact: sparkdirectory="~/spark-streaming" podname="spark-streaming" registry="{{ DOCKER_REGISTRY }}"
+- set_fact: sparkdirectory="~/spark-streaming" podname="spark-streaming" registry="{{ DOCKER_USER }}"
 
 - name: System - create directory
   file:

@@ -3,39 +3,39 @@
     name: k8s.monitoring
     tasks_from: install.yml
 
-- name: Docker login
-  ansible.builtin.include_role:
-    name: docker
-    tasks_from: main.yml
-
-- name: Build and push test image
-  ansible.builtin.include_role:
-    name: k8s.monitoring
-    tasks_from: image.yml
-
-- name: Create k8s HPA test app
+- name: Create k8s ingress
   ansible.builtin.include_role:
     name: k8s.monitoring
     tasks_from: apply.yml
 
-- name: Get ingress-nginx NodePort
-  ansible.builtin.shell: "kubectl get svc --no-headers -n ingress-nginx ingress-nginx-controller -o custom-columns=PORT:spec.ports[0].nodePort"
-  register: node_port
+# - name: Docker login
+#   ansible.builtin.include_role:
+#     name: docker
+#     tasks_from: main.yml
 
-- name: Set NodePort
-  ansible.builtin.set_fact: nodeport="{{ node_port.stdout }}"
+# - name: Build and push test image
+#   ansible.builtin.include_role:
+#     name: k8s.monitoring
+#     tasks_from: image.yml
 
-- name: Verify
-  ansible.builtin.include_role:
-    name: k8s.monitoring
-    tasks_from: verify.yml
+# - name: Get ingress-nginx NodePort
+#   ansible.builtin.shell: "kubectl get svc --no-headers -n ingress-nginx ingress-nginx-controller -o custom-columns=PORT:spec.ports[0].nodePort"
+#   register: node_port
 
-- name: Test
-  ansible.builtin.include_role:
-    name: k8s.monitoring
-    tasks_from: test.yml
+# - name: Set NodePort
+#   ansible.builtin.set_fact: nodeport="{{ node_port.stdout }}"
 
-- name: EndPoint
-  ansible.builtin.include_role:
-    name: k8s.monitoring
-    tasks_from: output.yml
+# - name: Verify
+#   ansible.builtin.include_role:
+#     name: k8s.monitoring
+#     tasks_from: verify.yml
+
+# - name: Test
+#   ansible.builtin.include_role:
+#     name: k8s.monitoring
+#     tasks_from: test.yml
+
+# - name: EndPoint
+#   ansible.builtin.include_role:
+#     name: k8s.monitoring
+#     tasks_from: output.yml

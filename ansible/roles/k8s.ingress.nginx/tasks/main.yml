@@ -19,6 +19,7 @@
     release_values:
       controller:
         kind: DaemonSet
+        #hostNetwork: "{{ not enable_k8s_ha_mode }}"
         service:
           nodePorts:
             http: "{{ INGRESS_NGINX_HTTP_PORT }}"
@@ -29,8 +30,8 @@
   register: result
   failed_when: result.rc != 0 and 'not found' not in result.stderr
   changed_when: result.rc == 0
-  with_items: "{{ groups['k8sApis'] }}"
-  when: inventory_hostname != groups['k8sM'][0]
+  with_items: "{{ groups['k8s'] }}"
+  when: cluster_size | int <= 3 or inventory_hostname != groups['k8sM'][0]
 
 # - name: Ingress Nginx Install
 #   ansible.builtin.command: |

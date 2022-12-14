@@ -23,8 +23,6 @@ K8S_DEFAULE_NAMESPACE: 'default'
 # 如果自裝zk, 使用false; 或者用true, hbase會負責跑zookeeper
 HBASE_MANAGES_ZK: 'false'
 KAFKA_BROKER: 2
-DOCKER_USER: 'jasoncheng'
-DOCKER_PASS: 'dckr_pat_rfPcLh1ogXsajGfe8Es8trWUuis'
 # Ceph
 CEPHFS: 'cephfs'
 CEPHFS_CLIENT_FS: 'fs'

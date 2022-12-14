@@ -1,7 +1,7 @@
 Previous on [main branch](https://github.com/jasoncheng/testbed/tree/main) we play Ceph, Zookeeper, Kafka, Hadoop, HBase, Kubernetes ...on Ubuntu and RHEL based OS.
 
-From now on, we start a brand new [v2 branch](https://github.com/jasoncheng/testbed/tree/v2), let's build almost everything on k8s, 
-hope this automatic ansible tool help anyone else to learn more about devops.<br><br>
+From now on, we start a brand new [v2 branch](https://github.com/jasoncheng/testbed/tree/v2), let's build almost everything on kubernetes, 
+hope this ansible automatic scripts can help someone else to learn more about devops.<br><br>
 
 # Environment
 
@@ -22,12 +22,19 @@ hope this automatic ansible tool help anyone else to learn more about devops.<br
 
 ### HardDisk for storage
 
-    1TB Toshiba (Over seven years ago?? maybe)
-    500GB Unknow brand (Over ten years ago)
-    150GB Unknow brand (Over ten years ago)
+&nbsp;&nbsp;1TB Toshiba (Over seven years ago?? maybe)
+
+&nbsp;&nbsp;~~500GB Unknow brand (Over ten years ago)~~ !! Broken 🥲
+
+&nbsp;&nbsp;~~150GB Unknow brand (Over ten years ago)~~ !! Broken 🥲
+
+&nbsp;&nbsp;1TB ADATA (20221214 New One)
 
 <sup>
    I cannot afford more hard disk for now, so collect disk from others; I would recommend buy new one instead of waste your time on troubleshooting... But debugging more issues, let us can handle more situation earily, isn't it.......</sup> 😂
+
+   ![505852](https://user-images.githubusercontent.com/540463/207633001-f442db96-934b-43bc-902a-aac3af679bab.jpg)
+
 <br><br>
 
 ### Nodes Information
@@ -66,6 +73,11 @@ hope this automatic ansible tool help anyone else to learn more about devops.<br
 
 # Getting Start
 
+### 0. What kind of infra you choise ?
+
+- AWS Cloud: Please [go here](https://github.com/jasoncheng/testbed#aws-infrastructure-setup) to finish terraform apply, once finished, you can skip Step 1.
+- On-Premise: Go next.
+
 ### 1. Update Ansible Inventory
 
 &nbsp;&nbsp;Modify [inventory/pi.inv](https://github.com/jasoncheng/testbed/blob/v2/ansible/inventory/pi.inv), *according to you envirnoment.*
@@ -84,7 +96,6 @@ hope this automatic ansible tool help anyone else to learn more about devops.<br
 
 &nbsp;&nbsp;&nbsp;<sup>Go [docker.io](https://docker.io/), register account and get information for fill up the params.</sup>
   
-     DOCKER_REGISTRY: 'USE_YOUR_OWN'
      DOCKER_USER: 'USE_YOUR_OWN'
      DOCKER_PASS: 'USE_YOUR_OWN'
 
@@ -109,21 +120,22 @@ hope this automatic ansible tool help anyone else to learn more about devops.<br
 
 ### 6. Install Ingress-Nginx on kubernetes
 
-     $ ansible-playbook k8s-ingress-nginx.yml --tags k8s
+     $ ansible-playbook k8s-ingress-nginx.yml
 
 
-### 7. Install Kubernetes dashboard
+### 7. Install Kubernetes dashboard (Optional)
+
 
      $ ansible-playbook k8s-dashboard.yml
 
 
 ### 8. Create Storage Cluster on Kubernetes
 
-&nbsp;&nbsp;&nbsp;&nbsp;Create StorageClass by [Rook Ceph operator](https://rook.io/) on Kubernetes.
+&nbsp;&nbsp;&nbsp;&nbsp;Create StorageClass on Kubernetes by [Rook Ceph operator](https://rook.io/).
 
-     $ ansible-playbook k8s-rook-ceph.yml -i inventory/pi.inv
+     $ ansible-playbook k8s-rook-ceph.yml
 
-     ## This output will also include login credential, if you want to retrive password again ##
+     ## This output will also include login credential, if you want to retrieve password again ##
 
      $ kubectl -n rook-ceph get secret rook-ceph-dashboard-password -o jsonpath="{['data']['password']}" | base64 --decode && echo
 
@@ -143,7 +155,7 @@ This will install,
 
 &nbsp;&nbsp;&nbsp;&nbsp;By [Prometheus Community Operator](https://github.com/prometheus-community/helm-charts) with [Helm](https://helm.sh/), as mentioned before, everything on Kubernetes.
 
-     $ ansible-playbook k8s-rook-ceph.yml -i inventory/pi.inv
+     $ ansible-playbook k8s-monitoring.yml
 
 ### 10. Config you local envirnoment
 
@@ -154,4 +166,21 @@ This will install,
 
      ## remote control k8s from your PC ##
 
-     # ansible-playbook k8s-local-kube-config.yml -i inventory/pi.inv
+     # ansible-playbook k8s-local-kube-config.yml
+
+
+### 11. Test all by kubernetes Keda Operator (Auto Scaling Operator)
+
+
+&nbsp;&nbsp;&nbsp;&nbsp;This step can make sure below listed is setup correctly, something like all you can eat? 🧐
+
+- Kubernetes: Cluster must be okay for sure
+- Prometheus: Scrape config is okay, and also provide Keda's ScaledObject to query metrics
+- System OS: Okay for build docker image, and push to registry
+- HttpRequest Go Server: My simple go server for provide /metrics for prometheus to scrape.
+- Keda operator: ScaledObject(Auto Scaling) is work as expected.
+- Kubernetes Nginx ingress: If nginx correct proxy my fake host to HttpRequest service port
+
+&nbsp;&nbsp;&nbsp;&nbsp;[Click me](https://github.com/jasoncheng/testbed/tree/main#ansible-playbook---k8s---monitoring--autoscaling-hpa-and-keda-library) for checking more details (Video).
+
+      $ ansible-playbook test.yml --tags test-keda

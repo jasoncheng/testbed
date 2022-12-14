@@ -10,6 +10,9 @@
     dest: "{{ tmpDir }}/{{ prefix }}{{ item | replace('.j2', '') }}"
     src: "{{ item }}"
   with_items:
+  - "app.yml.j2"
+  - "scaledobject.yml.j2"
+  - "service.yml.j2"
   - "ingress.yml.j2"
   register: result
 

@@ -135,39 +135,12 @@
   ansible.builtin.include_role:
     name: k8s.rook.ceph
     tasks_from: enableRook
-
-# Misc
-# ceph mgr module enable rook
-# ceph orch set backend rook
-
-# https://www.cnblogs.com/gzxbkk/p/7737467.html
+  when: action != 'absent'
 
 # sgdisk -n 1:0:+500G /dev/sda -t 1:45b0969e-9b03-4f30-b4c6-b4b80ceff106 -c 1:"ceph journal"
 # sgdisk -n 2:0:+500G /dev/sda -t 2:4fbd7e29-9d25-41b8-afd0-062c0ceff05d -c 2:"ceph data"
 # dd if=/dev/zero of=/dev/sda1 bs=1M count=100 oflag=direct,dsync
 # dd if=/dev/zero of=/dev/sda2 bs=1M count=100 oflag=direct,dsync
-
-# sgdisk -n 1:0:+20G /dev/sda -t 1:45b0969e-9b03-4f30-b4c6-b4b80ceff106 -c 1:"ceph journal"
-# sgdisk -n 2:0:+20G /dev/sda -t 2:45b0969e-9b03-4f30-b4c6-b4b80ceff106 -c 2:"ceph journal"
-# sgdisk -n 3:0:+800G /dev/sda -t 3:4fbd7e29-9d25-41b8-afd0-062c0ceff05d -c 3:"ceph data"
-# sgdisk -n 4:0:+800G /dev/sda -t 4:4fbd7e29-9d25-41b8-afd0-062c0ceff05d -c 4:"ceph data"
-
-# sgdisk -n 1:0:+20G /dev/sda -t 1:45b0969e-9b03-4f30-b4c6-b4b80ceff106 -c 1:"ceph journal"
-# sgdisk -n 2:0:+1900G /dev/sda -t 2:4fbd7e29-9d25-41b8-afd0-062c0ceff05d -c 2:"ceph data"
-# dd if=/dev/zero of=/dev/sda1 bs=1M count=100 oflag=direct,dsync
-# dd if=/dev/zero of=/dev/sda2 bs=1M count=100 oflag=direct,dsync
-# dd if=/dev/zero of=/dev/sda3 bs=1M count=100 oflag=direct,dsync
-# dd if=/dev/zero of=/dev/sda4 bs=1M count=100 oflag=direct,dsync
-
-# sgdisk -n 1:0:+145G /dev/sda
-# dd if=/dev/zero of=/dev/sda1 bs=1M count=100 oflag=direct,dsync
-
-# sgdisk -n 1:0:+145G /dev/sdb
-# sgdisk -n 2:0:+145G /dev/sdb
-# dd if=/dev/zero of=/dev/sdb1 bs=1M count=100 oflag=direct,dsync
-
-# ceph mgr module enable rook
-# ceph orch set backend rook
 
 # kubectl patch storageclass ceph-block -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"false"}}}'
 # kubectl patch storageclass ceph-filesystem -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'

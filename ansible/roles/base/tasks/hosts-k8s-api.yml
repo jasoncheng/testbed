@@ -1,11 +1,12 @@
-
 - name: Update kube-apiserver etc/hosts
   become: true
+  vars:
+    random_host: "{{ RESOURCE_PREFIX }}{{ groups['nodes'] | length | random(start=1) }}"
   ansible.builtin.lineinfile:
     dest: "/etc/hosts"
     regexp: "k8s-api$"
-    line: "{{ K8S_HA_VIP }}    k8s-api"
+    line: "{{ random_host if not enable_k8s_ha_mode else K8S_HA_VIP }}    k8s-api"
     state: present
   tags: ['base']
-  delegate_to: "{{ 'localhost' if localonly else inventory_hostname}}"
-  when: K8S_HA_VIP != ""
+  delegate_to: "{{ 'localhost' if localonly else inventory_hostname }}"
+  when: enable_k8s_ha_mode

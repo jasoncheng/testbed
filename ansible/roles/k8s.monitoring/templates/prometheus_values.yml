@@ -13,7 +13,7 @@ alertmanager:
           accessModes: ["ReadWriteOnce"]
           resources:
             requests:
-              storage: 7Gi
+              storage: 50Gi
   {% endif %}
   {% if smtp_host is defined %}
   config:
@@ -61,7 +61,7 @@ prometheus:
           accessModes: ["ReadWriteOnce"]
           resources:
             requests:
-              storage: 12Gi
+              storage: 50Gi
     {% endif %}
     additionalScrapeConfigs:
     - job_name: 'http-request-total'
@@ -69,3 +69,19 @@ prometheus:
       scrape_timeout: 5s
       static_configs:
       - targets: ['http-request-total.default.svc.cluster.local:9121']
+    - job_name: 'uptime'
+      metrics_path: /probe
+      params:
+        module: [http_2xx]
+      static_configs:
+        - targets:
+          - 'https://gooole.com'
+          - 'https://www.amazon.com/'
+          - 'https://twitter.com'
+      relabel_configs:
+        - source_labels: [__address__]
+          target_label: __param_target
+        - source_labels: [__param_target]
+          target_label: instance
+        - target_label: __address__
+          replacement: blackbox-prometheus-blackbox-exporter.blackbox:9115

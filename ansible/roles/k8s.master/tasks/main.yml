@@ -21,7 +21,7 @@
     dest: "{{ item.path }}"
     remote_src: true
     owner: "{{ item.owner }}"
-    mode: 0600
+    mode: 0644
   register: result
   when: K8S_USER != 'root' or '/home/root' not in item.path
   with_items:
@@ -60,7 +60,7 @@
 - name: Check local user
   ansible.builtin.set_fact:
     localUser: "{{ lookup('env', 'USER') }}"
-    k8s_join_command: "{{ k8s_join_result.stdout_lines[0] }} {{ cert_key }}"
+    k8s_join_command: "{{ k8s_join_result.stdout_lines[0] }} {{ '' if cert_key is not defined else cert_key }}"
 
 - name: Save command to file in your local
   become: false

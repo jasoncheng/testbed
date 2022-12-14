@@ -1,4 +1,14 @@
 ---
+
+- name: Set env
+  ansible.builtin.import_playbook: env.yml
+
+- name: "Test > k8s keda operator "
+  hosts: k8sS[0]
+  gather_facts: false
+  roles:
+  - { role: test.k8s.keda, tags: ['test-keda'] }
+
 - name: "Test > hadoop + zookeeper + pyspark + k8s pod "
   hosts: builder
   gather_facts: false

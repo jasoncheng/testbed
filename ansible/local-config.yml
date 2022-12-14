@@ -1,4 +1,7 @@
 ---
+- name: Set env
+  ansible.builtin.import_playbook: env.yml
+
 - name: Config local
   hosts: nodes[0]
   gather_facts: false

@@ -2,14 +2,14 @@
   set_fact:
     cmd: "kubectl get pods --selector=app=http-request-total --no-headers | wc -l"
 
-# - name: "Check http-requst-total pod should scaleOut"
-#   ansible.builtin.command: "{{ cmd }}"
-#   register: result
-#   failed_when: result.stdout != "1"
-
 - name: "Stress Test"
   ansible.builtin.command: "hey -n 90000 -m GET http://{{ DOMAINS['httpreq'] }}/metrics"
   register: result
+  when: not is_centos7_pi
+
+- name: Debug
+  ansible.builtin.debug:
+    msg: "{{ result.stdout_lines }}"
   when: not is_centos7_pi
 
 - name: "Stress Test CentOS7 on Pi"
@@ -18,26 +18,26 @@
   ignore_errors: true
   when: is_centos7_pi
 
-- debug: msg="{{ result.stdout }}"
+- name: Debug
+  ansible.builtin.debug:
+    msg: "{{ result.stdout_lines }}"
+  when: is_centos7_pi
 
 - name: "Check http-requst-total pod should scaleOut"
   ansible.builtin.shell: "{{ cmd }}"
   register: result
   until: result.stdout != "1"
-  retries: 6
+  retries: 12
   delay: 10
-  # failed_when: result.stdout == "1"
 
 - name: Debug
   ansible.builtin.debug:
     msg: "http-requst-total have {{ result.stdout }} pods"
-
-# - name: "Wait for 60 seconds for ScaleIn"
-  # ansible.builtin.wait_for: timeout=60
+  when: result is defined and result.stdout is defined
 
 - name: "Check http-request-total pod should scaleIn"
   ansible.builtin.shell: "{{ cmd }}"
   register: result
-  retries: 6
+  retries: 12
   delay: 10
   until: result.stdout == "1"

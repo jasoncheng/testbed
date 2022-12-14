@@ -73,3 +73,8 @@
 <hr>
 
     $ ansbile -m reboot -i inventory/pi.inv -l YOUR_OSD_NODE_NAME
+
+
+### Ceph - clusterdisruption-controller: osd "rook-ceph-osd-1" is down but no node drain is detected
+
+    $ kubectl delete deploy -n rook-ceph rook-ceph-osd-1

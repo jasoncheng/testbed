@@ -1,5 +1,5 @@
 ---
-- set_fact: registry="{{ DOCKER_REGISTRY }}"
+- set_fact: registry="{{ DOCKER_USER }}"
 
 - name: System - create producer and consumer directory
   file:

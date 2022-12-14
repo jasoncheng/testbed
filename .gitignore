@@ -2,7 +2,7 @@ ansible/*.pem
 ansible/*.pub
 ansible/inventory/*.inv
 ansible/buffer/
-ansible/ansible.cfg
+#ansible/ansible.cfg
 __pycache__
 
 # terraform

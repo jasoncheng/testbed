@@ -18,8 +18,3 @@ K8S_CIDRBLOCK: '10.244.0.0/16'
 INGRESS_NGINX_HTTP_PORT: 30478
 INGRESS_NGINX_HTTPS_PORT: 30487
 OS_USER: 'ubuntu'
-
-# please don't do the evil w/ my demo account for newbie
-DOCKER_REGISTRY: 'jasoncheng'
-DOCKER_USER: 'jasoncheng'
-DOCKER_PASS: 'dckr_pat_rfPcLh1ogXsajGfe8Es8trWUuis'

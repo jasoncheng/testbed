@@ -1,12 +1,5 @@
 SCRAPE_URLS: [
-  # 'https://gooole.com',
-  # 'https://www.amazon.com/',
-  # 'https://twitter.com'
-  'https://portal.decs.dlink.com/',
-  'https://global-staging.decs.dlink.com/',
-  'https://mbsdedge-dev.decs.dlink.com/',
-  'https://lab.decs.dlink.com:40001/grafana/?orgId=1',
-  'https://lab.decs.dlink.com:40001/jenkins',
-  'https://nttrd.nuclias.com/',
-  'https://nttrd2.nuclias.com/'
+  'https://gooole.com',
+  'https://www.amazon.com/',
+  'https://twitter.com'
 ]

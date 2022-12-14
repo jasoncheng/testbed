@@ -1,8 +1,0 @@
-- name: Info
-  ansible.builtin.debug:
-    msg:
-    - "Grafana URL http://{{ DOMAINS['grafana'] }}/, user/password admin/{{ grafana_password }}"
-    - "Prometheus URL http://{{ DOMAINS['prometheus'] }}/"
-    - "Go Web Server http://{{ DOMAINS['httpreq'] }}/"
-    - "Go Web Server Metrics http://{{ DOMAINS['httpreq'] }}/metrics"
-    - "$ hey -n 10000 -m GET http://{{ DOMAINS['httpreq'] }}/hello, and watch pods scaleOut/scaleIn"

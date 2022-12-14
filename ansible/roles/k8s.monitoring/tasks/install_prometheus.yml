@@ -3,6 +3,11 @@
     name: prometheus-community
     repo_url: "{{ chart_prometheus }}"
 
+# - name: Prometheus - Load Scrape Urls from additionalScrapeUrls.yml
+#   ansible.builtin.include_vars:
+#     dir: vars
+#     files_matching: additionalScrapeUrls.yml
+
 - name: Prometheus - Helm Value
   ansible.builtin.set_fact:
     helm_value: "{{ lookup('template', 'prometheus_values.yml') }}"

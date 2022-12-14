@@ -18,7 +18,7 @@
 
 - community.docker.docker_image:
     name: "{{ imageRepo }}"
-    repository: "{{ DOCKER_REGISTRY }}/{{ imageRepo }}"
+    repository: "{{ DOCKER_USER }}/{{ imageRepo }}"
     build:
       path: "{{ tmpImageDir }}"
     source: build

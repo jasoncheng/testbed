@@ -17,7 +17,7 @@
   ansible.builtin.lineinfile:
     dest: "/etc/hosts"
     regexp: "{{ item.value }}$"
-    line: "{{ K8S_HA_VIP }}   {{ item.value }}"
+    line: "{{ hostvars[random_host].ansible_host if not enable_k8s_ha_mode else K8S_HA_VIP }}   {{ item.value }}"
     state: present
   tags: ['base', 'etchosts']
   delegate_to: localhost
@@ -26,7 +26,7 @@
 
 - name: Add Kube-ApiServer domain to etc/hosts
   vars:
-    localonly: yes
+    localonly: true
   ansible.builtin.include_role:
     name: base
     tasks_from: hosts-k8s-api

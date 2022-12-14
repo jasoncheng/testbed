@@ -11,7 +11,7 @@
 
 - set_fact: HOST1="v1.jasoncheng.tw" HOST2="*.jasoncheng.tw" 
 
-- set_fact: REGISTRY="{{ DOCKER_REGISTRY }}" REPO="py-webserver"
+- set_fact: REGISTRY="{{ DOCKER_USER }}" REPO="py-webserver"
 
 - set_fact: DIR="~/hello-ingress"
 

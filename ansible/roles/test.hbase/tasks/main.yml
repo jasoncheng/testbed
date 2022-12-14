@@ -1,5 +1,5 @@
 ---
-- set_fact: directory="~/hbase-test" jobname="hbase-test" registry="{{ DOCKER_REGISTRY }}"
+- set_fact: directory="~/hbase-test" jobname="hbase-test" registry="{{ DOCKER_USER }}"
 
 - name: If Hbase running
   wait_for:
