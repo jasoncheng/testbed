@@ -27,7 +27,7 @@
   $ ansible -m file -a "src=~/.kube/config dest=~/.kube/config" -i inventory/pi.inv k8sM
   ``` 
 
-## Unable to attach or mount error for volume pvc-.....Vlume is already exclusively attached to one node and can't be attached to another
+## Unable to attach or mount error for volume pvc-.....Volume is already exclusively attached to one node and can't be attached to another
 
   Root Cause: When my alertManager mount volume w/ Ceph (PV/PVC), and directly shutdown the node where this pod located, the new Pod will stuck on ContainerCreating, dashboard won't work anymore and show this error message.
 
@@ -36,7 +36,7 @@
 
   $ kubectl describe pod -n prometheus-stack -l app.kubernetes.io/name=alertmanager
 
-  ## patch this resource for skip this waiting time
+  ## patch this resource for skip this waiting time ##
 
   $ kubectl pach statefulsets -n prometheus-stack alertmanager-prometheus-stack-kube-prom-alertmanager -p '{"spec": {"replicas": 0}}'
   ```
