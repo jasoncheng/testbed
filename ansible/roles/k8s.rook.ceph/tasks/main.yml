@@ -23,9 +23,6 @@
     - inventory_hostname in groups['k8sM']
     - action != 'absent'
 
-# Refs: https://github.com/rook/rook/blob/release-1.9/deploy/charts/rook-ceph/values.yaml
-# ceph-volume lvm zap /dev/sda
-# https://forum.proxmox.com/threads/how-to-wipe-a-disk-which-was-osd-before.59373/?fbclid=IwAR2YBNQCwUubSqH8C3OJPDAgFVMxlCdlpHwV0A5FAx5CTtCemA_Pd0J3baM
 - name: "Do {{ action }} rook-ceph operator"
   when: inventory_hostname in groups['k8sM']
   kubernetes.core.helm:
@@ -37,16 +34,10 @@
     release_name: rook-ceph
     release_values:
       pspEnable: false
-      useOperatorHostNetwork: true
       monitoring:
-        enabled: false
+        enabled: true
       resources: null
       csi:
-        # forceCephFSKernelClient: false
-        # enableSelinuxRelabeling: false
-        # disableAdmissionController: true
-        # hostpathRequiresPrivileged: true
-
         # RBD
         enableRbdDriver: true
         enableRBDSnapshotter: true
@@ -56,16 +47,11 @@
         # CephFS
         enableCephfsDriver: true
         enableCephfsSnapshotter: true
-        # csiCephFSPluginResource: null
-
-        # GRpc
-        # enableGrpcMetrics: false
 
         # CSI
         csiNFSProvisionerResource: null
         csiNFSPluginResource: null
 
-# Refs: https://github.com/rook/rook/blob/release-1.9/deploy/charts/rook-ceph-cluster/values.yaml
 - name: "Do {{ action }} rook-ceph-cluster"
   when: inventory_hostname in groups['k8sM']
   kubernetes.core.helm:
@@ -78,34 +64,22 @@
     release_values:
       pspEnable: false
       monitoring:
-        enabled: false
+        enabled: true
       toolbox:
         enabled: true
       cephClusterSpec:
         removeOSDsIfOutAndSafeToRemove: true
-        # cephVersion:
-          # image: quay.io/ceph/ceph:v17.2.5 # Quincy
-          # image: quay.io/ceph/ceph:v16.2.10 # Pacific (Default)
-          # allowUnsupported: true
         mon:
           allowMultiplePerNode: true
         mgr:
           allowMultiplePerNode: true
         dashboard:
           enabled: true
-          ssl: true
-          port: 8443
-        # crashCollector:
-        #   disable: true
+          ssl: false
         resources: null
         storage:
           useAllNodes: true
           useAllDevices: true
-          # deviceFilter: ^sd[a-z]+$
-      # cephBlockPools:
-      #   - spec:
-      #       replicated:
-      #         size: 2
       cephObjectStores: null
 
 - name: Deploy Ingress

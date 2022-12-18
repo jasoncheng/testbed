@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  namespace: "{{ K8S_DEFAULE_NAMESPACE }}"
+  name: http-request-total
+  labels:
+    name: http-request-total
+spec:
+  selector:
+    matchLabels:
+      app: http-request-total
+  endpoints:
+  - port: metrics
+  #additionalScrapeConfigs:
+  #- job_name: 'http-request-total'
+  #  scrape_interval: 5s
+  #  scrape_timeout: 5s
+  #  static_configs:
+  #  - targets:
+  #    - 'http-request-total.default.svc.cluster.local:9121'

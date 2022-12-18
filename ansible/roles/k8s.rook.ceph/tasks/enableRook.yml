@@ -4,7 +4,7 @@
 
 - name: Ceph module enable rook
   ansible.builtin.shell: |
-    kubectl exec -it -n rook-ceph {{ result.stdout }} -- {{ item }}
+    kubectl exec -i -n rook-ceph {{ result.stdout }} -- {{ item }}
   with_items:
     - ceph mgr module enable rook
     - ceph orch set backend rook

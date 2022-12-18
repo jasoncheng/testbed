@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: http-request-total
+  namespace: "prometheus-stack"
+spec:
+  serviceAccountName: admin
+  #serviceMonitorNamespaceSelector: {}
+  #serviceMonitorSelector: {}
+  #podMonitorSelector: {}
+  enableAdminAPI: false
+  additionalScrapeConfigs:
+    name: additional-scrape-configs
+    key: {{ prefix }}prometheus-additional.yaml
+# https://blog.container-solutions.com/prometheus-operator-beginners-guide

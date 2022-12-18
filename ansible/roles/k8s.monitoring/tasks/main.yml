@@ -1,3 +1,8 @@
+# - name: Patch k8s
+#   ansible.builtin.include_role:
+#     name: k8s.monitoring
+#     tasks_from: enable_kube-system-monitoring
+
 - name: Install monitoring
   ansible.builtin.include_role:
     name: k8s.monitoring

@@ -1,0 +1,116 @@
+# - name: Test
+#   k8s:
+#     # namespace: kube-system
+#     # state: present
+#     # namespace: default
+#     # merge_type: strategic-merge
+#     definition:
+#       apiVersion: v1
+#       kind: ConfigMap
+#       metadata:
+#         name: jason
+#         namespace: kube-system
+#       data:
+#         ClusterConfiguration: |
+#           etcd:
+#             local:
+#               extraArgs:
+#                 listen-metrics-urls: http://0.0.0.0:2381
+#           controllerManager:
+#             extraArgs:
+#               bind-address: "0.0.0.0"
+#           scheduler:
+#             extraArgs:
+#               bind-address: "0.0.0.0"
+    # apply: yes
+
+
+# All prometheus target should be green.
+# - name: Patch kube-prome-kube-etcd
+#   become_user: root
+#   ansible.builtin.shell: |
+#     kubectl patch cm kubeadm-config -n kube-system --type merge --patch '{"data": {"ClusterConfiguration": {"etcd": {"local": {"extraArgs": {"listen-metrics-urls": "http://0.0.0.0:2381"}}}}}}'
+#     kubectl patch cm kubeadm-config -n kube-system --type merge --patch '{"data": {"ClusterConfiguration": {"controllerManager": {"extraArgs": {"bind-address": "0.0.0.0"}}}}}'
+#     # kubectl patch cm kubeadm-config -n kube-system --type merge --patch '{"data": {"ClusterConfiguration": {"scheduler": {"extraArgs": {"bind-address": "0.0.0.0"}}}}}'
+#     kubeadm upgrade node
+#   register: result
+#   delegate_to: "{{ item }}"
+#   with_items: "{{ groups['k8sApis'] }}"
+
+# - name: Restart kubelet
+#   ansible.builtin.systemd:
+#     name: kubelet
+#     state: restarted
+#   when: result.changed
+
+# - name: Debug patch etcd
+#   ansible.builtin.debug:
+#     msg: "{{ result.stdout }}"
+#   when: result is defined and result.stdout is defined
+
+# - name: Patch kube-prome-kube-proxy
+#   async: 60
+#   ansible.builtin.shell: |
+#     kubectl patch cm kube-proxy -n kube-system --patch '{"data": {"config.conf": {"metricsBindAddress": "0.0.0.0:10249"}}}'
+#     kubectl delete pod -l k8s-app=kube-proxy -n kube-system
+#   no_log: true
+#   failed_when: false
+#   ignore_errors: true
+#   register: result
+
+# - name: Debug patch proxy
+#   ansible.builtin.debug:
+#     msg: "{{ result.stdout }}"
+#   when: result is defined and result.stdout is defined
+
+# Data
+# ====
+# ClusterConfiguration:
+# ----
+# apiServer:
+#   extraArgs:
+#     authorization-mode: Node,RBAC
+#   timeoutForControlPlane: 4m0s
+# apiVersion: kubeadm.k8s.io/v1beta3
+# certificatesDir: /etc/kubernetes/pki
+# clusterName: kubernetes
+# controlPlaneEndpoint: k8s-api:16443
+# controllerManager: {}
+# dns: {}
+# etcd:
+#   local:
+#     dataDir: /var/lib/etcd
+# imageRepository: registry.k8s.io
+# kind: ClusterConfiguration
+# kubernetesVersion: v1.26.0
+# networking:
+#   dnsDomain: cluster.local
+#   podSubnet: 10.244.0.0/16
+#   serviceSubnet: 10.96.0.0/12
+# scheduler: {}
+
+# apiVersion: v1
+# data:
+#   ClusterConfiguration: |
+#     apiServer:
+#       extraArgs:
+#         authorization-mode: Node,RBAC
+#       timeoutForControlPlane: 4m0s
+#     apiVersion: kubeadm.k8s.io/v1beta3
+#     certificatesDir: /etc/kubernetes/pki
+#     clusterName: kubernetes
+#     controlPlaneEndpoint: k8s-api:16443
+#     controllerManager: {}
+#     dns: {}
+#     etcd:
+#       local:
+#         dataDir: /var/lib/etcd
+#     imageRepository: registry.k8s.io
+#     kind: ClusterConfiguration
+#     kubernetesVersion: v1.26.0
+#     networking:
+#       dnsDomain: cluster.local
+#       podSubnet: 10.244.0.0/16
+#       serviceSubnet: 10.96.0.0/12
+#     scheduler: {}
+# kind: ConfigMap

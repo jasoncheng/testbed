@@ -1,12 +1,11 @@
-- set_fact: prefix="http-request-"
-
+# - set_fact: prefix="http-request-"
 - name: Create Directory
-  file:
+  ansible.builtin.file:
     state: directory
     path: "{{ tmpDir }}"
   
 - name: Create templates
-  template:
+  ansible.builtin.template:
     dest: "{{ tmpDir }}/{{ prefix }}{{ item | replace('.j2', '') }}"
     src: "{{ item }}"
   with_items:
@@ -14,8 +13,13 @@
   - "scaledobject.yml.j2"
   - "service.yml.j2"
   - "ingress.yml.j2"
+  - "serviceMonitor.yml.j2"
+  # - "prometheus-additional.yaml.j2"
+  # - "prometheus.yaml.j2"
   register: result
 
+# ignore apply ^promethues
 - name: Kubectl apply
-  shell: "kubectl apply -f {{ item.dest }}"
-  loop: "{{ result.results | flatten(levels=1) }}"
+  ansible.builtin.shell: |
+    kubectl apply $(ls {{ tmpDir }}/*.yml | awk ' { print " -f " $1 } ')
+  # loop: "{{ result.results | flatten(levels=1) }}"

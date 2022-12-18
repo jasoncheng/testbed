@@ -48,6 +48,7 @@
   register: k8s_join_result
 
 - name: Get cert if necessary
+  become_user: root
   ansible.builtin.shell: kubeadm init phase upload-certs --upload-certs | tail -1
   when: enable_k8s_ha_mode
   register: result
@@ -56,6 +57,13 @@
   ansible.builtin.set_fact:
     cert_key: "{{ '' if result is not defined or result.stdout is not defined else '--certificate-key '+result.stdout}}"
   when: enable_k8s_ha_mode
+
+- name: Debug
+  ansible.builtin.debug:
+    msg:
+      - "result {{ result }}"
+      - "enable_k8s_ha_mode {{ enable_k8s_ha_mode }}"
+      - "certificate-key  {{ cert_key }}"
 
 - name: Check local user
   ansible.builtin.set_fact:

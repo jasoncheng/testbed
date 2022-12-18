@@ -1,8 +1,7 @@
 - name: CNI package
   ansible.builtin.include_role:
     name: k8s.uninstall
-    tasks_from: pi4-centos9
-  when: is_centos9_pi
+    tasks_from: cni0
 
 - name: Kubeadm
   ansible.builtin.include_role:

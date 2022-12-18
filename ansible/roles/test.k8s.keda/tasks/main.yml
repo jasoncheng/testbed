@@ -18,19 +18,3 @@
   ansible.builtin.include_role:
     name: test.k8s.keda
     tasks_from: apply.yml
-
-- name: Verify
-  ansible.builtin.include_role:
-    name: test.k8s.keda
-    tasks_from: verify.yml
-
-- name: Test
-  ansible.builtin.include_role:
-    name: test.k8s.keda
-    tasks_from: test.yml
-
-- name: Clean
-  ansible.builtin.include_role:
-    name: test.k8s.keda
-    tasks_from: clean.yml
-  
