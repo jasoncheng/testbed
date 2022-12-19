@@ -3,6 +3,13 @@
     name: k8s.uninstall
     tasks_from: cni0
 
+- name: UnHold package
+  vars:
+    hold: false
+  ansible.builtin.include_role:
+    name: k8s
+    tasks_from: hold-pkg-version
+
 - name: Kubeadm
   ansible.builtin.include_role:
     name: k8s.uninstall

@@ -9,11 +9,11 @@
     dest: "{{ tmpDir }}/{{ prefix }}{{ item | replace('.j2', '') }}"
     src: "{{ item }}"
   with_items:
+  - "serviceMonitor.yml.j2"
   - "app.yml.j2"
   - "scaledobject.yml.j2"
   - "service.yml.j2"
   - "ingress.yml.j2"
-  - "serviceMonitor.yml.j2"
   # - "prometheus-additional.yaml.j2"
   # - "prometheus.yaml.j2"
   register: result

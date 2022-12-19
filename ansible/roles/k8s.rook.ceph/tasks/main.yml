@@ -25,6 +25,7 @@
 
 - name: "Do {{ action }} rook-ceph operator"
   when: inventory_hostname in groups['k8sM']
+  ignore_errors: true
   kubernetes.core.helm:
     create_namespace: true
     release_namespace: rook-ceph
@@ -54,6 +55,7 @@
 
 - name: "Do {{ action }} rook-ceph-cluster"
   when: inventory_hostname in groups['k8sM']
+  ignore_errors: true
   kubernetes.core.helm:
     create_namespace: true
     release_namespace: rook-ceph

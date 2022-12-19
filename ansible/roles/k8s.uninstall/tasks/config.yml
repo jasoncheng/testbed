@@ -11,3 +11,5 @@
     - /etc/cni/net.d
     - /opt/cni
     - /etc/cni
+    - /var/run/flannel
+    - /var/lib/containerd

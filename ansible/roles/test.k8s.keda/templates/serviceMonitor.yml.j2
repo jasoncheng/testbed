@@ -11,6 +11,9 @@ spec:
       app: http-request-total
   endpoints:
   - port: metrics
+    scheme: http
+  namespaceSelector:
+    any: true
   #additionalScrapeConfigs:
   #- job_name: 'http-request-total'
   #  scrape_interval: 5s

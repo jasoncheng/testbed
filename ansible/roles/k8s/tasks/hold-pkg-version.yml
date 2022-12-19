@@ -1,0 +1,9 @@
+- name: Hold kubernetes and docker
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: "{{ 'hold' if hold else 'install'}}"
+  with_items:
+    - docker.io
+    - kubeadm
+    - kubectl
+    - kubelet

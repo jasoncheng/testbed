@@ -1,7 +1,12 @@
-- name: install docker
-  ansible.builtin.shell: |
-    curl -fsSL https://get.docker.com -o get-docker.sh
-    sh get-docker.sh
+# - name: install docker
+#   ansible.builtin.shell: |
+#     curl -fsSL https://get.docker.com -o get-docker.sh
+#     sh get-docker.sh
+
+- name: Insall docker.io
+  ansible.builtin.package:
+    name: "docker.io=20.10.12-0ubuntu2~20.04.1"
+    state: present
 
 - name: Add docker group
   ansible.builtin.group:

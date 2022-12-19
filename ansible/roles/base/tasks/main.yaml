@@ -30,6 +30,9 @@
   - openjdk-11-jdk
   - apt-transport-https
   - hey
+  - iftop
+  - iotop
+  - htop
   when: is_ubuntu_os
 
 - name: Install package CentOS only

@@ -10,10 +10,10 @@
     path: /var/lib/rook/
     state: absent
 
-- name: Format hard disk
-  ansible.builtin.include_role:
-    name: base
-    tasks_from: zapping-device
+# - name: Format hard disk
+#   ansible.builtin.include_role:
+#     name: base
+#     tasks_from: zapping-device
 
 # - name: Format Jason's and Nancy's hard disk, haha..
 #   ansible.builtin.include_role:
@@ -45,6 +45,7 @@
     kubectl api-resources --verbs=list --namespaced -o name \
     | xargs -n 1 kubectl get --show-kind --ignore-not-found -n rook-ceph
   when: inventory_hostname in groups['k8sM']
+  ignore_errors: true
 
 - name: Delete CephFilesystem
   ansible.builtin.command: kubectl delete --ignore-not-found -n rook-ceph CephFilesystem ceph-filesystem
