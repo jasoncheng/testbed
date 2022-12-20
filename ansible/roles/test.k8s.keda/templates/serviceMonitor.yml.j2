@@ -5,19 +5,15 @@ metadata:
   name: http-request-total
   labels:
     name: http-request-total
+    release: prometheus-stack
 spec:
   selector:
     matchLabels:
       app: http-request-total
   endpoints:
-  - port: metrics
+  - targetPort: metrics
     scheme: http
+    interval: 5s
+    #scrapeTimeout: 5s
   namespaceSelector:
     any: true
-  #additionalScrapeConfigs:
-  #- job_name: 'http-request-total'
-  #  scrape_interval: 5s
-  #  scrape_timeout: 5s
-  #  static_configs:
-  #  - targets:
-  #    - 'http-request-total.default.svc.cluster.local:9121'

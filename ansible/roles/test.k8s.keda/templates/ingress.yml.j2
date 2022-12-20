@@ -14,7 +14,7 @@ spec:
     service:
       name: http-request-total
       port:
-        number: 9121
+        number: {{ metrics_port }}
   rules:
   - host: {{ DOMAINS['httpreq'] }}
     http:
@@ -25,4 +25,4 @@ spec:
           service:
             name: http-request-total
             port:
-              number: 9121
+              number: {{ metrics_port }}

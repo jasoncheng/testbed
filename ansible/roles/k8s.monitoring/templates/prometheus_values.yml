@@ -1,19 +1,4 @@
 #jinja2: trim_blocks: True, lstrip_blocks: True
-#kubeControllerManager:
-#  serviceMonitor:
-#    enabled: true
-#    https: true
-#    insecureSkipVerify: true
-#kubeScheduler:
-#  serviceMonitor:
-#    enabled: true
-#    https: true
-#    insecureSkipVerify: true
-#kubeEtcd:
-#  serviceMonitor:
-#    enabled: true
-#    https: true
-#    insecureSkipVerify: true
 defaultRules:
   rules:
      alertManager: true
@@ -95,28 +80,3 @@ prometheus:
             requests:
               storage: 50Gi
     {% endif %}
-    #additionalScrapeConfigs:
-    #- job_name: 'http-request-total'
-    #  scrape_interval: 5s
-    #  scrape_timeout: 5s
-    #  static_configs:
-    #  - targets: ['http-request-total.default.svc.cluster.local:9121']
-    #- job_name: 'uptime'
-    #  metrics_path: /probe
-    #  params:
-    #    module: [http_2xx]
-    #  static_configs:
-    #    - targets:
-    #      - 'https://nttrd2.nuclias.com/'
-    #      - 'https://nttrd.nuclias.com/'
-    #      - 'https://jprd.nuclias.com/'
-    #      - 'https://mbsdedge-dev.decs.dlink.com/'
-    #      - 'https://global-staging.decs.dlink.com/'
-    #      - 'https://portal.decs.dlink.com/'
-    #  relabel_configs:
-    #    - source_labels: [__address__]
-    #      target_label: __param_target
-    #    - source_labels: [__param_target]
-    #      target_label: instance
-    #    - target_label: __address__
-    #      replacement: blackbox-prometheus-blackbox-exporter.blackbox:9115

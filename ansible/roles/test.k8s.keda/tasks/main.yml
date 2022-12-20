@@ -14,10 +14,10 @@
 #     name: test.k8s.keda
 #     tasks_from: image
 
-- name: Create k8s HPA test app
-  ansible.builtin.include_role:
-    name: test.k8s.keda
-    tasks_from: apply
+# - name: Create k8s HPA test app
+#   ansible.builtin.include_role:
+#     name: test.k8s.keda
+#     tasks_from: apply
 
 # - name: Verify
 #   ansible.builtin.include_role:
@@ -28,3 +28,8 @@
 #   ansible.builtin.include_role:
 #     name: test.k8s.keda
 #     tasks_from: test
+
+- name: Clean resources
+  ansible.builtin.include_role:
+    name: test.k8s.keda
+    tasks_from: clean

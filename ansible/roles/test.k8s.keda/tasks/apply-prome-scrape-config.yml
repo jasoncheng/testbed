@@ -1,9 +1,0 @@
-- name: Create scrape config secret file
-  ansible.builtin.shell: |
-    kubectl create secret generic additional-scrape-configs \
-      --from-file={{ tmpDir }}/{{ prefix }}prometheus-additional.yaml \
-      --dry-run=client -oyaml | kubectl apply -f -
-
-- name: Apply additionalConfigs
-  ansible.builtin.shell: |
-    kubectl apply -f {{ tmpDir }}/{{ prefix }}prometheus.yaml

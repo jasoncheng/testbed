@@ -1,295 +1,209 @@
+Previous on [main branch](https://github.com/jasoncheng/testbed/tree/main) we play Ceph, Zookeeper, Kafka, Hadoop, HBase, Kubernetes ...on Ubuntu and RHEL based OS.
 
-``` Welcome to JasonCheng lab, This is just my playground ```
+From now on, we start a brand new [v2 branch](https://github.com/jasoncheng/testbed/tree/v2), let's build almost everything on kubernetes, 
+hope this ansible automatic scripts can help someone else to learn more about devops.<br><br>
 
-## Update
+# Environment
 
-  20221216 - v2: [Start building almost everything on Kubernetes](https://github.com/jasoncheng/testbed/blob/v2/README.v2.md)
-
-## Head First
-
-  For practice, for share, big data / infrastructure as code / Kubernetes / python skill / dockerized / ansible...
-
-  My work env is **MacOS**, and server default is provision in **ubuntu 22.04** system, 
-
-  If you try to run in different enviornment, such as RHEL based os, you should modify ansible to suit your requirements
+### Computer
   
-  **BTW**, i'm working on *Pi4 x 5 pcs w/ CentOS7*.
-
-## My Targets
+&nbsp;&nbsp; [Pi4B](https://www.raspberrypi.com/products/raspberry-pi-4-model-b/) x 6
 
-  - **[Hadoop](https://hadoop.apache.org/)** A software for reliable, scalable, distributed computing
-  - **[Hbase](https://hbase.apache.org/)** A distrbuted, scalable, big data store database
-  - **[Kafka](https://kafka.apache.org/)** A distrbuted event streaming platform
-  - **[Spark](https://spark.apache.org/)** A multi-language engine for executing data engineering, data sicense, and machine learning on single-mode machines or cluster
-  - **[Zookeeper](https://zookeeper.apache.org/)** For manage animal ... 😂 (used by hadoop, hbase, kafka)
-  - **[Kubernetes](https://kubernetes.io/)** A automating deployment, scaling, and management of containerized application
-  - **[Ceph](https://ceph.com/en/)** Ceph is an open-source, distrubuted storage system.
-  - **[Terraform](https://www.terraform.io/)** Infrastructure as code software
-  - **[Ansible](https://www.ansible.com/)** It's the simplest way to automate IT.
-  - **[Python](https://www.python.org/)** A program language, one of animal  😂
-  - **[Go](https://go.dev/)** A programming language.
-  - **[k8s-KEDA](https://keda.sh/)** A kubernetes based Event Driven AutoScaler
-  - **[k8s-ingress-nginx](https://github.com/kubernetes/ingress-nginx)** A ingress controller for kubernetes using **[NGINX](https://www.nginx.com/)**
-  - **[k8s-csi-ceph](https://github.com/ceph/ceph-csi)** ceph storag class for k8s
-  - **[k8s-rook-ceph](https://rook.io/)** provision/manage ceph cluster on k8s by using rook k8s operator
-  - prometheus **[blackbox-exporter](https://github.com/prometheus/blackbox_exporter)** Probing of endpoint over HTTP, HTTPS, DNS, TCP, ICMP, gRPC
-  - **[Grafana/Loki](https://github.com/grafana/loki)** A horizontally-scalable, highly-available, multi-tenant log aggregation system.
+### OS
 
-<br />
+&nbsp;&nbsp; [Ubuntu 20.04](https://ubuntu.com/) ([why?](https://docs.ceph.com/en/quincy/start/os-recommendations/)); *Use [Pi-Imager](https://www.raspberrypi.com/software/) to install ubuntu to all your sdcard first.*
 
-## File & Directory
 
-  | Name  | Description |
-  | ----- | ----- |
-  | ansible | Ansible playbook |
-  | terraform | For building testing server on AWS (ubuntu 20.04) |
-  | test | python code for testing infrastructure |
+&nbsp;&nbsp; *I also test on CentOS 7 and CentOS Stream 9, even though i installed everything but still look like many kubernetes's issues on Raspberry Pi require to be resolve, in current stage, all i want is focus on k8s, this is another reason.*
 
-<br />
+### SDCard for OS
 
-## AWS Infrastructure Setup
+&nbsp;&nbsp; [SanDisk microSD C10](https://www.amazon.com/SanDisk-128GB-Extreme-microSD-Adapter/dp/B07FCMKK5X) x 6
 
-  If you already have on-premise server, please **skip** this step.
+### HardDisk for storage
 
-  Change terraform/variables.tf for your personal requirement,
+&nbsp;&nbsp;1TB Toshiba (Over seven years ago?? maybe)
 
-  Default will create 3 t3.small instances(2 Core CPU and 2G Memory) with 24G EBS volumes at ap-northeast-1 region.
+&nbsp;&nbsp;~~500GB Unknow brand (Over ten years ago)~~ !! Broken 🥲
 
-   ```
-   $ terraform apply
-   ```
+&nbsp;&nbsp;150GB Unknow brand (Over ten years ago)
 
-  ``` Caution ``` 
-  
-  **t3.small** instance only have 2G memory, if you try to provision all tags, you will face to OOM issue; or maybe you can run **t3.medium** instance (4G memory) for prevent that.
+&nbsp;&nbsp;1TB ADATA (20221214 New One)
 
-  Once all server created, we will automatic generate below listed files,
+<sup>
+   I cannot afford more hard disk for now, so collect disk from others; I would recommend buy new one instead of waste your time on troubleshooting... But debugging more issues, let us can handle more situation earily, isn't it.......</sup> 😂
 
-   | File | Description |
-   | ---- | ---- |
-   | ansible/inventory/bd.inv | ansible inventory |
-   | terraform/bd.pem | server ssh private key |
-   | terraform/bd.pub | server pub key |
-   | ansible/ansible.cfg | ansible config file |
+   ![505852](https://user-images.githubusercontent.com/540463/207633001-f442db96-934b-43bc-902a-aac3af679bab.jpg)
 
-<br />
+<br><br>
 
-## On-Premise Setup
+### Nodes Information
 
-  If you use previous terraform to build aws infra, please **skip** this step.
+| IP | Hostname | k8s Role | HA Proxy |
+| -------- | -------- | ----- | --- |
+| 10.33.27.184 | pi0 | node |✔️
+| 10.33.27.186 | pi1 | control-plane |
+| 10.33.27.138 | pi2 | node |
+| 10.33.27.193 | pi3 | control-plane |
+| 10.33.27.129 | pi4 | node |
+| 10.33.27.174 | pi5 | node |✔️
 
-  Otherwise, please copy/create/modify below listed files,
+&nbsp;&nbsp;Keep in mind, best pratice and better performance is **2*N + 1** nodes, but...but...we just wanna use all of our Pi 😍.
+<br><br>
 
-  | SRC | DEST | Description |
-  | --- | --- | --- |
-  | terraform/ansible.cfg.tpl | ansible/ansible.cfg | ansible config file |
-  | terraform/ansible.inventory.tpl | ansible/inventory/bd.cfg | ansible inventory file |
-  | ansible/group_vars/bd.yml | ansible/group_vars/bd.yml | update what you want |
-  | N/A | terraform/bd.pub | rename you public key for servers or update ansible.cfg
-  | N/A | terraform/bd.pem | rename you public key for servers or update ansible.cfg
+### Goal 
 
+&nbsp;&nbsp; *once all step finished, you can test all the tools on your PC browser*
 
-<br />
+| Domain | Description | Account Passwoard |
+| -------- | -------- | -------- |
+| https://k8s | kubernetes dashboard | Login w/ you PC ~/.kube/config |
+| http://ceph | Ceph dashboard | ID: admin <br>PS: output from step 7. console log |
+| http://alert | AlertManager dashboard | N/A |
+| http://prome | Prometheus dashboard | N/A |
+| http://grafana | Grafana dashboard | ID: admin <br> PS: admin
+| https://k8s-api:16443 | No UI, just for k8s HA | N/A |
 
-## Ansible Playbook - Provision
+| SSH Hostname | Description |
+| -------- | -------- |
+| pi0~pi5 | $ ssh pi0<br> $ ssh pi1|
 
-    $ ansible-playbook provision.yml [--tags TAG]
 
-  Note: don't forget add args [**-i inventory/pi.inv**] for all playbooks which depends on what inventory you want to use.
+![architecture-ha-k8s-cluster](https://user-images.githubusercontent.com/540463/205344177-79fa8f07-e30d-4a5d-a6e3-5d072a4ec7f0.png)
 
-  | TAG | Description | Dependence |
-  | --- | --- | --- |
-  | N/A | this will setup everything | N/A |
-  | base | setup ubuntu server for support other tags, once base is done, <br />you could ssh bd1 for ssh login server01 | N/A |
-  | zk | install and setup zk cluster | base |
-  | kafka | install and setup kafka cluster | base, zk |
-  | k8s | install and setup kubernetes cluster | base |
-  | hadoop | install and setup hadoop | base, zk |
-  | hbase | install and setup hbase | base, hadoop, zk |
-  | ceph | install and setup ceph | base |
-  | etchosts | add those servers to you local /etc/hosts | N/A |
-  | local-ssh | add new config file into your local ~/.ssh/config.d;<br /> So, you can easiest login server by **ssh bd1** | N/A |
-  | stop[start] | stop or stop all | N/A |
-  | stop[start]-hbase | stop or stop hbase | base, zk |
-  | stop[start]-hadoop | stop or stop hadoop | base, zk |
-  | stop[start]-zk | stop or stop zookeeper | base |
-  | stop[start]-kafka | stop or stop kafka | base, zk |
-  | stop[start]-ceph | stop or stop ceph | base, ceph |
+<br>
 
+# Getting Start
 
-<br />
+### 0. What kind of infra you choise ?
 
-## Ansible Playbook - config local enviornment
+- AWS Cloud: Please [go here](https://github.com/jasoncheng/testbed#aws-infrastructure-setup) to finish terraform apply, once finished, you can skip Step 1.
+- On-Premise: Go next.
 
-For update your local /etc/hosts, ``` -K  ```  is required
- 
-    $ ansible-playbook local-config.yml -K
- 
-Then, enjoy 😍
+### 1. Update Ansible Inventory
 
-![SSH](https://user-images.githubusercontent.com/540463/204861081-862d9cbb-ef26-4558-9b15-a74c7f61e37b.png)
+&nbsp;&nbsp;Modify [inventory/pi.inv](https://github.com/jasoncheng/testbed/blob/v2/ansible/inventory/pi.inv), *according to you envirnoment.*
 
-![EtcHosts](https://user-images.githubusercontent.com/540463/204861642-8c5edd1d-a6bc-4b84-8c76-f509cf2fd58a.png)
+### 2. Update Ansible variables
 
-  
-<br />
+[vim groups/vars/pi.yml](https://github.com/jasoncheng/testbed/blob/v2/ansible/group_vars/pi.yml#L34)
 
-## Ansible Playbook - k8s - Rook & Ceph - Cloud Native Storage Class for Kubernetes
+&nbsp;&nbsp;&nbsp;<sup>Pick a available IP, later..we will use this IP address to play as **VIP**.</sup>
 
-    $ ansible-playbook k8s-rook-ceph.yml
+&nbsp;&nbsp;&nbsp;<sup>BTW, most other variables was used for legacy branch main, leave it alone.</sup>
 
-<br />
+     K8S_HA_VIP: '10.33.27.78'
 
-## Ansible Playbook - Control remote k8s cluster from local
+[vim ~/.bash_profile](#)
 
-    $ ansible-playbook k8s-local-kube-config.yml
+&nbsp;&nbsp;&nbsp;<sup>Append those lines on you PC ~/.bash_profile bottom.
 
-![kubectl from local](https://user-images.githubusercontent.com/540463/204862291-834367a3-a783-4b36-9284-55a9627e23b8.png)
+     # if you want to enable alermMnager send email
+     export SMTP_HOST=''
+     export SMTP_USER=''
+     export SMTP_PASS=''
+     export SMTP_FROM=''
 
-<br />
+     # if you to to run Step 11, plz fill your docker.io account info
+     export DOCKER_USER=''
+     export DOCKER_PASS=''
 
-## Ansible Playbook - Test
+     # the mail receiver for alertManager
+     export ALERT_EMAIL_RECEIVER=''
 
-   This playbook will test k8s & kafka infra is constructed.
+   <sup>After modified, source you bash profile</sup>
 
-   Using python script as producer and consumer to demo how to use kafka on k8s pod.
+     $ source ~/.bash_profile
 
-    $ ansible-playbook test.yml [--tags TAG]
 
-  | TAG | Description | Dependency |
-  | --- | --- | --- |
-  | N/A | for testing everything | base, k8s, zk, kafka, hadoop
-  | test-kafka | This will create consumer and producer pod, for testing <br />Kubernetes cluster, Kafka and zookeeper are work as expect | base, k8s, zk, kafka |
-  | test-spark | This will use netcat as stream server and Spark SQL + <br />Spark Streaming as client on Kubernetes cluster, base on LogisticRegression,  demostrate sentiment analysis by using tweets | base, k8s, hadoop, zk |
-  | test-hbase | Try to create a kubernetes job and use python module happybase to create table and insert rows | base, hadoop, zk, hbase |
-  | test-k8s-ingress | Write a nodejs simple webserver deploy to ingress nginx controller and verify if ingress works with different paths works. | base, k8s(atleast 3 nodes) |
-  | test-k8s-operator-ansible | **Ansible k8s Operator**; require **operator-sdk** & **kustomize** installed | base, k8s && k8s-local-kube-config.yml |
-  | test-k8s-operator-go | **Golang k8s Operator**; require **kubebuilder** installed | base, k8s && k8s-local-kube-config.yml |
-  | test-k8s-csi-ceph | use ceph as storage class on k8s | base,ceph,k8s && k8s-local-kube-config.yml |
+### 3. Provision all nodes
 
-<br /><br />
+     $ ansible-playbook provision.yml --tags base
 
-## Ansible Playbook - k8s dashboard
 
-   This playbook will create **k8s dashboard**.
+### 4. Prepare High Availability Proxy
 
-     $ ansible-playbook k8s-dashboard.yml [--tags TAG]
+&nbsp;&nbsp;Create a VIP on eth0; This will install and configure [HaProxy](http://www.haproxy.org/) and [KeepAlived](https://github.com/acassen/keepalived) by VIP (according inventory/pi HA group)
 
-  | TAG | Description | Provision Denpendency |
-  | --- | --- | --- |
-  | N/A | provision dashboard and provider login token and url | base, k8s |
-  | start | start dashboard | base, k8s |
-  | end | stop dashboard | base, k8s |
-
-![Dashboard - login w/ kube config](https://user-images.githubusercontent.com/540463/204858729-d4280fc4-b9d4-429e-a0eb-66ca3af6a35e.png)
-
-![Dashboard - Pi4 cluster](https://user-images.githubusercontent.com/540463/204858669-85950f67-9f90-4d2b-b3cd-79694a62f1a9.png)
-
-<br />
-
-## Ansible Playbook - k8s - Monitoring & AutoScaling HPA and Keda library
-
-  ### Prerequisite
-
-  | Description | Note |
-  | --- | --- |
-  | At least 3 nodes | N/A |
-  | Play provision.yml --tags base,k8s | this will also install ingress nginx |
-  | Play k8s-local-kube-config.yml | N/A |
-  
-  ### Step
-
-  | STEP | Task | Description |
-  | --- | --- | --- |
-  | 1 | install.yml | helm install and config prometheus, granfa, loki, keda, blackbox, [grafana blackbox exporter dashboard](https://grafana.com/grafana/dashboards/7587-prometheus-blackbox-exporter/) |
-  | 2 | apply.yml | use my simple golang to build distroless docker image (**14.4MB**), this application not only listen http request but also provide prometheus /metrics w/ http_requests_total parameters |
-  | 3 | apply.yml |deploy my app and [keda](https://keda.sh/) ScaledObject |
-  | 4 | verify.yml | make sure scaleobject successful deploy |
-  | 5 | test.yml| use [hey](https://github.com/rakyll/hey) command to request /metrics on **http-request-total.default.svc.cluster.local**, **prometheus-stack-kube-prom-prometheus.prometheus-stack** will collection metrics, and [keda](https://keda.sh/) scaledobject will dectect **sum(rate(http_requests_total[10s]))** from prometheus amd do her jobs , then ansible verify if my app ScaleIn and ScaleOut in the right way. |
-  | 6 | output.yml | print services uri |
-
-  ### Run
-
-    $ ansible-playbook k8s-monitoring.yml
-
-  Note: [Config](https://github.com/jasoncheng/testbed/issues/12) more URLs to monitoring
-
-  ![BlackBox Exporter](https://user-images.githubusercontent.com/540463/204856792-7b42454d-a5d3-48ae-b4ec-4655125fc92f.png)
-
-  ![Prometheus](https://user-images.githubusercontent.com/540463/204858635-52b5c40e-49f5-4028-8527-e4c41b005ec4.png)
-
-  ### Video
-  
-  [![Demo k8s pod auto scaling by using keda scaledobject](http://img.youtube.com/vi/piX1C9a-Ya0/0.jpg)](https://youtu.be/piX1C9a-Ya0 "click watch video")
-
-<br />
-
-## Ansible Playbook - k8s Container Storage Interface(CSI) for Ceph
-
-  This is just demostrate how to use Ceph as storage class on k8s,
-
-  First, create EC2 instances on AWS (note: at least use t3.medium instance, t3.small is not enough for running this demo), so create you YOUR_TERRAFORM_VAR.tf and override **instance_type_first=t3.medium**, **instance_type=t3.medium**, **instance_count=4**.
-
-    $ terraform apply -var-file=vars/YOUR_TERRAFORM_VAR.tf 
-
-  Provision your ubuntu servers, and also install/config ceph and k8s
-
-    $ ansible-playbook provision.yml --tags base,ceph,k8s -K
-
-  Then, able remote control kubernetes cluster through you local kubectl
-
-    $ ansible-playbook k8s-local-kube-config.yml
-
-  Deploy k8s csi for Ceph
-
-    $ ansible-playbook test.yml --tags test-k8s-csi-ceph
-
-  After minintues, login busybox pod, and have fun :)
-
-    $ kubectl exec -it pod-with-raw-block-volume -- ls /mnt/ceph_rbd
-
-  After finished all test, destroy all,
-
-    $ terraform destroy -var-file=vars/YOUR_TERRAFORM_VAR.tf 
-
-  ![Ceph dashboard](https://user-images.githubusercontent.com/540463/201524079-0f35fcbc-aff1-4a70-846e-96050afd8db5.png)
-
-  ![k8s CSI for Ceph](https://user-images.githubusercontent.com/540463/201524082-f4d10d43-ddfb-4787-a75d-55f485043af5.png)
-
-<br />
-
-## Ansbile Playbook - Health check
-
-    $ ansible-playbook health.yml
-
-<br />
-
-## Add new node into k8s cluster
+     $ ansible-playbook ha.yml
      
-  First, increase instance by modify terrafor/variables.tf var.instance_count+1
+     ## Verify if VIP success binding on eth0 ##
 
-     ! new a aws instance
-     $ cd terraform && terraform apply
+     $ ansible -m shell -a "ip a show eth0" HA
 
-     ! provision new instance
-     $ ansible-playbook provision.yml --tags base -K
+### 5. Install Kubernetes
 
-     ! provision new instance and join cluster
-     $ ansible-playbook k8s.yml --tags k8sS,join_only
+     $ ansible-playbook provision.yml --tags k8s
 
-     ! enable kubectl for remote control
+
+### 6. Install Ingress-Nginx on kubernetes
+
+     $ ansible-playbook k8s-ingress-nginx.yml
+
+
+### 7. Install Kubernetes dashboard (Optional)
+
+
+     $ ansible-playbook k8s-dashboard.yml
+
+
+### 8. Create Storage Cluster on Kubernetes (Optional)
+
+&nbsp;&nbsp;&nbsp;&nbsp;Create StorageClass on Kubernetes by [Rook Ceph operator](https://rook.io/).
+
+     $ ansible-playbook k8s-rook-ceph.yml
+
+     ## This output will also include login credential, if you want to retrieve password again ##
+
+     $ kubectl -n rook-ceph get secret rook-ceph-dashboard-password -o jsonpath="{['data']['password']}" | base64 --decode && echo
+
+
+### 9. Install Monitor tools on Kubernetes
+
+&nbsp;&nbsp;&nbsp;&nbsp;Let's start crazy install all the monitor tools ..😝. haha,
+This will install,
+
+&nbsp;&nbsp;&nbsp;&nbsp;**Notice**: If you skip Step 8., please update [pi.inv](https://github.com/jasoncheng/testbed/blob/v2/ansible/inventory/pi.inv), and comment out *CEPH_STORAGE_CLASS* and *CEPH_STORAGE_CLASS_RBD* variables.
+
+- [Prometheus](https://prometheus.io/)
+- [Loki](https://github.com/grafana/loki)
+- [Grafana](https://grafana.com/)
+- [AlertManager](https://prometheus.io/docs/alerting/latest/alertmanager/)
+- [NodeExporter](https://github.com/prometheus/node_exporter)
+- [Blackbox Exporter](https://github.com/prometheus/blackbox_exporter)
+- [Keda Operator](https://keda.sh/)
+
+&nbsp;&nbsp;&nbsp;&nbsp;By [Prometheus Community Operator](https://github.com/prometheus-community/helm-charts) with [Helm](https://helm.sh/), as mentioned before, everything on Kubernetes.
+
+     $ ansible-playbook k8s-monitoring.yml
+
+
+### 10. Config you local envirnoment (Optional)
+
+
+     ## point virtual domains for your PC only ##
+
+     $ ansible-playbook local-config.yml -K
+
+     ## control remote kubernetes cluster from your PC ##
+
      $ ansible-playbook k8s-local-kube-config.yml
 
-<br />
 
-## Ansible AdHoc
+### 11. Test all w/ kubernetes Keda Operator (Auto Scaling Operator)
 
-   Check running daemon through Java VM Process Status Tool (jps)
 
-     $ ansible -m shell -a jps all 
+&nbsp;&nbsp;&nbsp;&nbsp;This step can make sure below listed is setup correctly, something like all you can eat? 🧐
 
-<br />
+- Kubernetes: Cluster must be okay for sure
+- k8s HA if functional
+- Prometheus: Scrape config is okay, and also provide Keda's ScaledObject to query metrics
+- System OS: Okay for build docker image, and push to registry
+- HttpRequest Go Server: My simple go server for provide /metrics for prometheus to scrape.
+- Keda operator: ScaledObject(Auto Scaling) is work as expected.
+- Kubernetes Nginx ingress: If nginx correct proxy my fake host to HttpRequest service port
+- If Ceph Kubernetes CSI is work fine.
 
-## Destroy Infrastructure on AWS
+&nbsp;&nbsp;&nbsp;&nbsp;[Click me](https://github.com/jasoncheng/testbed/tree/main#ansible-playbook---k8s---monitoring--autoscaling-hpa-and-keda-library) for checking more details (Video).
 
-     $ cd terraform && terraform destroy
+      $ ansible-playbook test.yml --tags test-keda
