@@ -2,6 +2,8 @@ DOMAINS:
   {
     "grafana": "grafana",
     "prometheus": "prome",
+    "prometheusrd": "prome-rd",
+    "prometheusqa": "prome-qa",
     "alertmanager": "alert",
     "k8sDashboard": "k8s",
     "ceph": "ceph",
