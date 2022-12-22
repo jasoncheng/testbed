@@ -86,7 +86,7 @@ hope this ansible automatic scripts can help someone else to learn more about de
 
 ### 2. Update Ansible variables
 
-[vim groups/vars/pi.yml](https://github.com/jasoncheng/testbed/blob/v2/ansible/group_vars/pi.yml#L34)
+[vim groups_vars/pi.yml](https://github.com/jasoncheng/testbed/blob/v2/ansible/group_vars/pi.yml#L34)
 
 &nbsp;&nbsp;&nbsp;<sup>Pick a available IP, later..we will use this IP address to play as **VIP**.</sup>
 
