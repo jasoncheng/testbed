@@ -28,11 +28,11 @@ variable "instance_count" {
 }
 
 variable "instance_ebs_size" {
-  default = 60
+  default = 24
 }
 
 variable "instance_extra_ebs_size" {
-  default = 24
+  default = 60
 }
 
 variable "tags" {
