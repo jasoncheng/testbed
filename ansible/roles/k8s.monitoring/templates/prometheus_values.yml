@@ -43,6 +43,17 @@ alertmanager:
   {% endif %}
 grafana:
   adminPassword: "{{ grafana_password }}"
+  {% if CEPH_STORAGE_CLASS is defined %}
+  persistence:
+    enabled: true
+    type: pvc
+    storageClassName: {{ CEPH_STORAGE_CLASS }}
+    size: 4Gi
+    accessModes:
+    - ReadWriteOnce
+    finalizers:
+    - kubernetes.io/pvc-protection
+  {% endif %}
   grafana.ini:
     smtp:
       enabled: true

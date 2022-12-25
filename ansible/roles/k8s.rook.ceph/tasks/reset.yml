@@ -6,6 +6,7 @@
     tasks_from: main
 
 - name: Remove /var/lib/rook folder
+  become: true
   ansible.builtin.file:
     path: /var/lib/rook/
     state: absent
