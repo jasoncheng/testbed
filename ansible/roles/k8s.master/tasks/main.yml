@@ -13,15 +13,21 @@
   changed_when: result.rc == 0
   failed_when: result.rc != 0 and result.stderr is defined and ('is in use' not in result.stderr or 'already exists' not in result.stderr)
 
-# TODO
+- name: Wait for admin.conf generated
+  become: true
+  become_user: root
+  ansible.builtin.wait_for:
+    path: /etc/kubernetes/admin.conf
+
 - name: Copy admin.conf to user's kube config
-  become_user: "root"
+  become: true
+  become_user: root
   ansible.builtin.copy:
     src: /etc/kubernetes/admin.conf
     dest: "{{ item.path }}"
     remote_src: true
     owner: "{{ item.owner }}"
-    mode: 0644
+    mode: 0600
   register: result
   when: K8S_USER != 'root' or '/home/root' not in item.path
   with_items:
@@ -63,7 +69,7 @@
     msg:
       - "result {{ result }}"
       - "enable_k8s_ha_mode {{ enable_k8s_ha_mode }}"
-      - "certificate-key  {{ cert_key }}"
+      - "certificate-key  {{ '' if cert_key is not defined else cert_key }}"
 
 - name: Check local user
   ansible.builtin.set_fact:

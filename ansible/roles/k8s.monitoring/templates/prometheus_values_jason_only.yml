@@ -65,7 +65,14 @@ grafana:
     existingSecret: ""
     userKey: "user"
     passwordKey: "password"
-    
+  
+  additionalDataSources:
+  - name: prometheus-rd
+    orgId: 1
+    type: prometheus
+    url: http://prometheus-operated.rd:9090
+    version: 1
+
 {% if CEPH_STORAGE_CLASS is defined %}
 thanosRuler:
   thanosRulerSpec:

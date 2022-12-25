@@ -3,10 +3,12 @@
     action: "{{ 'present' if uninstall is not defined or not uninstall else 'absent' }}"
 
 - name: Modprobe rbd
+  become: true
   ansible.builtin.command: modprobe rbd
   when: not is_centos7_pi
 
 - name: Modprobe ceph
+  become: true
   ansible.builtin.command: modprobe ceph
   when: not is_centos7_pi
 
@@ -34,7 +36,6 @@
     release_state: "{{ action }}"
     release_name: rook-ceph
     release_values:
-      pspEnable: false
       monitoring:
         enabled: true
       resources: null
@@ -64,7 +65,6 @@
     release_state: "{{ action }}"
     release_name: rook-ceph-cluster
     release_values:
-      pspEnable: false
       monitoring:
         enabled: true
       toolbox:
@@ -88,6 +88,29 @@
   ansible.builtin.include_role:
     name: k8s.rook.ceph
     tasks_from: ingress
+  when: action != 'absent'
+
+- name: Some warning message
+  ansible.builtin.debug:
+    msg:
+      - " [Notice] "
+      - " Congrats !! Basically .. Rook-Ceph already installed, but maybe something wrong there cause rook-ceph-operator unable to finish all jobs."
+      - ''
+      - " If next step unable to finish, it could be OSD not ready yet or maybe your machines not powerful enough for rook-ceph-operator, it's take time..so maybe try again later."
+      - " If you still unable to get admin password.."
+      - " Plz describe pod/deployment/svc check and pod logs first;  below command maybe help "
+      - " $ kubectl logs -f -n rook-ceph -l app=rook-ceph-operator "
+      - ""
+      - " Maybe there is no any disk ready for it? below command maybe help "
+      - " I won't put format disk on ansible task for it's will cause you NEW DISK data lost, "
+      - " So, plz do it manually(i won't take responsibility on this) when there is no any OSD pod prepare or created for a long time."
+      - " Refs: https://docs.ceph.com/en/latest/ceph-volume/intro/ "
+      - " $ ansible -m shell -a 'sudo sgdisk --zap-all /dev/YOU_NEW_DEVICE' INVENTORY_HOSTNAME[GROUP_NAME][all?]"
+      - " $ ansible -m shell -a 'sudo dd if=/dev/zero of=/dev/YOU_NEW_DEVICE bs=1M count=100 oflag=direct,dsync'  INVENTORY_HOSTNAME[GROUP_NAME][all?]"
+      - " $ kubectl rollout restart deploy -n rook-ceph rook-ceph-operator"
+      - ""
+      - " Or reset rook-ceph first and add more nodes into cluster, and play again "
+      - " $ ansible-playbook k8s-rook-ceph-reset.yml "
   when: action != 'absent'
 
 - name: Fetch admin password

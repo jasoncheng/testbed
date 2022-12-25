@@ -65,11 +65,11 @@
     name: base
     tasks_from: hosts.yml
 
-- name: Touch env file
-  ansible.builtin.file:
-    mode: 0755
-    path: "{{ ENV_FILE_SOURCE }}"
-    state: touch
+# - name: Touch env file
+#   ansible.builtin.file:
+#     mode: 0755
+#     path: "{{ ENV_FILE_SOURCE }}"
+#     state: absent
 
 # - name: Set {{ ENV_FILE_SOURCE }} for all user
 #   ansible.builtin.blockinfile:
